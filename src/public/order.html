@@ -69,8 +69,9 @@
         class="fixed inset-0 bg-slate-900/90 z-[70] hidden flex flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white p-10 rounded-3xl flex flex-col items-center shadow-2xl max-w-sm w-full text-center">
             <div class="w-16 h-16 border-4 border-orange-100 border-t-orange-600 rounded-full animate-spin mb-6"></div>
-            <h3 class="text-2xl font-bold text-slate-800 mb-2">Yükleniyor...</h3>
-            <p class="text-slate-500 text-sm">Verileriniz Drive'a güvenle aktarılıyor.<br>Lütfen bekleyiniz.</p>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">Siparişiniz Oluşturuluyor... 🎨</h3>
+            <p class="text-slate-500 text-sm">Fotoğraflarınız ve bilgileriniz güvenle kaydediliyor.<br>Bu birkaç dakika
+                sürebilir, lütfen bekleyin.</p>
         </div>
     </div>
 
@@ -806,12 +807,12 @@
                             overlay.innerHTML = `
                             <div class="bg-white p-10 rounded-3xl flex flex-col items-center shadow-2xl max-w-md w-full text-center">
                                 <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-full flex items-center justify-center text-4xl mb-6 shadow-lg">✓</div>
-                                <h3 class="text-3xl font-bold text-slate-800 mb-3">🎉 Sipariş Başarılı!</h3>
-                                <p class="text-slate-600 mb-6">Siparişiniz başarıyla oluşturuldu.</p>
+                                <h3 class="text-3xl font-bold text-slate-800 mb-3">🎉 Teşekkür Ederiz!</h3>
+                                <p class="text-slate-600 mb-6">Siparişiniz başarıyla alındı. Ekibimiz en kısa sürede anı defterinizi hazırlamaya başlayacak!</p>
                                 
-                                <div class="w-full bg-orange-50 border-2 border-orange-200 rounded-xl p-4 mb-4">
-                                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Sipariş Numaranız</p>
-                                    <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-orange-300">
+                                <div class="w-full bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-xl p-4 mb-4">
+                                    <p class="text-xs font-semibold text-orange-700 uppercase tracking-wide mb-2">📦 Sipariş Numaranız</p>
+                                    <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-orange-300 shadow-sm">
                                         <code id="orderIdDisplay" class="flex-1 text-lg font-bold text-slate-800 font-mono select-all">${result.orderId}</code>
                                         <button onclick="copyOrderId('${result.orderId}')" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-md">
                                             📋 Kopyala
@@ -819,10 +820,13 @@
                                     </div>
                                 </div>
                                 
-                                <p class="text-sm text-slate-500 mb-6">💡 Bu numarayı kaydedin ve WhatsApp'tan paylaşabilirsiniz.</p>
+                                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-left">
+                                    <p class="text-sm text-blue-800 font-medium mb-2">💡 <strong>Önemli Bilgi:</strong></p>
+                                    <p class="text-sm text-blue-700">Bu numarayı güvende tutun! İlerleyen süreçte bizimle iletişime geçtiğinizde bu numarayı kullanarak siparişinizi takip edebilirsiniz.</p>
+                                </div>
                                 
-                                <button onclick="window.location.reload()" class="w-full px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-base font-bold transition shadow-lg">
-                                    Kapat
+                                <button onclick="window.location.reload()" class="w-full px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-base font-bold transition shadow-lg">
+                                    ❤️ Harika! Kapat
                                 </button>
                             </div>
                           `;

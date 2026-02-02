@@ -4,854 +4,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sipariş Paneli</title>
+    <title>EkoPortalHane - Anılarınızı Ölümsüzleştirin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style type="text/tailwindcss">
-        body { font-family: 'Outfit', sans-serif; }
-        
-        .section-card { 
-            @apply bg-white rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100 mb-8 flex flex-col md:flex-row gap-8 items-start hover:shadow-[0_10px_30px_-4px_rgba(0,0,0,0.1)] transition duration-300; 
-        }
-        .section-img { 
-            @apply w-full md:w-48 h-auto rounded-lg shadow-sm border border-slate-100 object-cover flex-shrink-0; 
-        }
-        .section-content { @apply flex-1 w-full space-y-4; }
-        .section-title { @apply text-lg font-bold text-slate-800 mb-3 flex items-center gap-2; }
-        
-        /* Inputs & Magic Button */
-        .input-group { @apply flex-1 flex gap-2 items-center w-full; }
-        .input-track { 
-            @apply w-full p-3.5 bg-slate-50 border-0 rounded-xl ring-1 ring-slate-200 text-sm text-slate-700 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:shadow-md outline-none transition placeholder-slate-400 font-medium; 
-        }
-        .magic-btn {
-            @apply p-3 text-orange-500 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors cursor-pointer flex-shrink-0 shadow-sm border border-slate-100 bg-white;
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
         }
 
-        .drop-zone { 
-            @apply relative w-28 h-28 aspect-square flex-shrink-0 bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-orange-500 hover:bg-orange-50 hover:scale-105 transition duration-300 overflow-hidden shadow-sm; 
-        }
-        .drop-zone.drag-over { @apply border-orange-600 bg-orange-100 scale-110 shadow-lg; }
-        .preview-layer { @apply absolute inset-0 bg-cover bg-center bg-no-repeat z-10 pointer-events-none opacity-0 transition-opacity duration-300; }
-        .delete-btn { @apply absolute top-1 right-1 bg-white text-red-500 rounded-full p-1.5 shadow-md opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all z-20 cursor-pointer hover:bg-red-50; }
-        
-        /* Modal Stilleri */
-        #magicModal {
-            @apply fixed inset-0 bg-slate-900/50 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm;
-        }
-        .modal-content {
-            @apply bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh];
-        }
-        .modal-header {
-            @apply p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50;
-        }
-        .modal-body {
-            @apply p-4 overflow-y-auto;
-        }
-        .suggestion-chip {
-            @apply block w-full text-left p-3 mb-2 rounded-lg text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition border border-slate-100 cursor-pointer;
-        }
-        .tab-btn {
-            @apply flex-1 py-3 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition;
-        }
-        .tab-btn.active {
-            @apply text-orange-600 border-orange-600 bg-orange-50/50;
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        .spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 4px solid #fff; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hero-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 
-<body class="bg-gray-50 text-slate-800 h-screen flex flex-col">
+<body class="bg-gray-50">
 
-    <div id="loadingOverlay"
-        class="fixed inset-0 bg-slate-900/90 z-[70] hidden flex flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white p-10 rounded-3xl flex flex-col items-center shadow-2xl max-w-sm w-full text-center">
-            <div class="w-16 h-16 border-4 border-orange-100 border-t-orange-600 rounded-full animate-spin mb-6"></div>
-            <h3 class="text-2xl font-bold text-slate-800 mb-2">Yükleniyor...</h3>
-            <p class="text-slate-500 text-sm">Verileriniz Drive'a güvenle aktarılıyor.<br>Lütfen bekleyiniz.</p>
-        </div>
-    </div>
+    <!-- Hero Section -->
+    <div class="gradient-bg hero-pattern min-h-screen flex items-center justify-center px-4 py-12">
+        <div class="max-w-4xl mx-auto text-center">
 
-    <div id="magicModal" class="hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="font-bold text-slate-800 flex items-center gap-2">✨ Hazır Mesaj Seç <span
-                        id="modalTargetName"
-                        class="text-xs font-normal text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full hidden"></span>
-                </h3>
-                <button onclick="closeMagicModal()"
-                    class="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
-            </div>
-            <div class="flex border-b border-slate-100">
-                <button class="tab-btn active" onclick="switchTab('romantic')">💘 Romantik</button>
-                <button class="tab-btn" onclick="switchTab('emotional')">🥺 Duygusal</button>
-                <button class="tab-btn" onclick="switchTab('funny')">😂 Komik</button>
-            </div>
-            <div class="modal-body" id="suggestionList"></div>
-        </div>
-    </div>
-
-    <div class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 py-3 shadow-sm">
-        <div class="container mx-auto max-w-5xl px-4 flex items-center gap-4">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Tamamlanma</span>
-            <div class="flex-1 h-2.5 bg-slate-200 rounded-full overflow-hidden">
-                <div id="progressBar"
-                    class="h-full bg-orange-600 w-0 transition-all duration-700 ease-out rounded-full shadow-[0_0_10px_rgba(234,88,12,0.5)]">
+            <!-- Logo / Brand -->
+            <div class="mb-8 floating">
+                <div
+                    class="inline-block bg-white/10 backdrop-blur-md rounded-3xl p-6 shadow-2xl border border-white/20">
+                    <h1 class="text-6xl md:text-7xl font-black text-white mb-2">
+                        📖 EkoPortalHane
+                    </h1>
+                    <p class="text-white/90 text-lg md:text-xl font-light">Anılarınızı Ölümsüzleştirin</p>
                 </div>
             </div>
-            <span id="progressText" class="text-sm font-bold text-orange-600 w-10 text-right">0%</span>
-        </div>
-    </div>
 
-    <div class="flex-1 overflow-y-auto w-full scroll-smooth">
-        <div class="container mx-auto max-w-5xl p-4 md:p-8 pb-40">
+            <!-- Hero Text -->
+            <div class="mb-12">
+                <h2 class="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                    Sevdiklerinizle Paylaştığınız<br>
+                    <span class="text-yellow-300">Unutulmaz Anlar</span>
+                </h2>
+                <p class="text-white/80 text-lg md:text-xl max-w-2xl mx-auto">
+                    Fotoğraflarınızı özenle tasarlanmış bir anı defterine dönüştürüyoruz.
+                    Her sayfa, bir hikaye. Her hikaye, bir hazine.
+                </p>
+            </div>
 
-            <form id="autoForm" enctype="multipart/form-data">
 
-                <div class="mb-12 text-center py-6">
-                    <input type="text" name="musteri_adi" required
-                        class="w-full md:w-2/3 text-4xl md:text-5xl font-black text-center bg-transparent border-b-4 border-slate-200 focus:border-orange-600 outline-none pb-4 transition-colors placeholder-slate-300 text-slate-800"
-                        placeholder="İsim ve Soyisim">
+
+            <!-- Features Grid -->
+            <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 card-hover">
+                    <div class="text-5xl mb-4">💝</div>
+                    <h3 class="text-white font-bold text-lg mb-2">Kişiselleştirilmiş</h3>
+                    <p class="text-white/70 text-sm">
+                        Her detay özenle hazırlanır, her sayfa size özeldir
+                    </p>
                 </div>
 
-                <section class="section-card">
-                    <img src="/examples/on_kapak.jpg" class="section-img" alt="Ön Kapak">
-                    <div class="section-content">
-                        <h2 class="section-title text-rose-600">1. Aşkın Başlangıcı (Ön Kapak)</h2>
-                        <div class="flex gap-4 mb-4">
-                            <div class="drop-zone group" data-name="01_Sayfa">
-                                <input type="file" name="01_Sayfa" class="hidden input-file" accept="image/*">
-                                <div class="text-center z-0"><span class="text-2xl mb-1 block">📸</span><span
-                                        class="text-[10px] font-bold text-slate-500 uppercase">Kapak</span></div>
-                                <div class="preview-layer"></div>
-                                <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                    </svg></button>
-                            </div>
-                            <div class="input-group">
-                                <input type="text" name="Text_Ana_Baslik" placeholder="Kapak Başlığı (Max 10)"
-                                    maxlength="10" class="input-track">
-                                <button type="button" class="magic-btn" onclick="openMagicModal('Text_Ana_Baslik')"
-                                    title="Hazır Mesaj">✨</button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 card-hover">
+                    <div class="text-5xl mb-4">✨</div>
+                    <h3 class="text-white font-bold text-lg mb-2">Profesyonel Tasarım</h3>
+                    <p class="text-white/70 text-sm">
+                        Uzman tasarımcılarımız her albümü bir sanat eserine dönüştürür
+                    </p>
+                </div>
 
-                <section class="section-card">
-                    <img src="/examples/yirtik_kagit_ ve_sayfa_2.jpg" class="section-img" alt="Yırtık Kağıt">
-                    <div class="section-content">
-                        <h2 class="section-title text-orange-600">2. Anılar (Kesikli Kağıt)</h2>
-                        <div class="flex flex-wrap gap-4 mb-4">
-                            <div class="drop-zone group" data-name="03_Sayfa_1">
-                                <input type="file" name="03_Sayfa_1" class="hidden input-file" accept="image/*">
-                                <div class="text-center z-0"><span class="text-xl mb-1 block">🖼️</span><span
-                                        class="text-[10px] font-bold text-slate-500">Foto 1</span></div>
-                                <div class="preview-layer"></div>
-                                <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                    </svg></button>
-                            </div>
-                            <div class="drop-zone group" data-name="03_Sayfa_2">
-                                <input type="file" name="03_Sayfa_2" class="hidden input-file" accept="image/*">
-                                <div class="text-center z-0"><span class="text-xl mb-1 block">🖼️</span><span
-                                        class="text-[10px] font-bold text-slate-500">Foto 2</span></div>
-                                <div class="preview-layer"></div>
-                                <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                    </svg></button>
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <input type="text" name="Text_03_Sayfa" placeholder="Kısa Not (Max 35)" maxlength="35"
-                                class="input-track">
-                            <button type="button" class="magic-btn" onclick="openMagicModal('Text_03_Sayfa')"
-                                title="Hazır Mesaj">✨</button>
-                        </div>
-                    </div>
-                </section>
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 card-hover">
+                    <div class="text-5xl mb-4">🌟</div>
+                    <h3 class="text-white font-bold text-lg mb-2">Kaliteli Baskı</h3>
+                    <p class="text-white/70 text-sm">
+                        Premium malzemelerle yıllar boyu bozulmadan saklanır
+                    </p>
+                </div>
 
-                <section class="section-card">
-                    <img src="/examples/sayfa_3_ve_4.png" class="section-img grayscale opacity-90" alt="Şerit 1">
-                    <div class="section-content">
-                        <h2 class="section-title text-indigo-600">3. Film Şeridi - Bölüm 1</h2>
-                        <div class="flex gap-4 mb-4">
-                            <div class="drop-zone group" data-name="06_Sayfa">
-                                <input type="file" name="06_Sayfa" class="hidden input-file" accept="image/*">
-                                <div class="text-center z-0"><span class="text-xl mb-1 block">🎞️</span><span
-                                        class="text-[10px] font-bold text-slate-500">Şerit</span></div>
-                                <div class="preview-layer"></div>
-                                <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                    </svg></button>
-                            </div>
-                            <div class="input-group">
-                                <input type="text" name="Text_06_Sayfa" placeholder="Etiket (Max 10)" maxlength="10"
-                                    class="input-track">
-                                <button type="button" class="magic-btn" onclick="openMagicModal('Text_06_Sayfa')"
-                                    title="Hazır Mesaj">✨</button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+            </div>
 
-                <section class="section-card">
-                    <img src="/examples/sayfa_3_ve_4.png" class="section-img grayscale opacity-90" alt="Şerit 2">
-                    <div class="section-content">
-                        <h2 class="section-title text-indigo-600">4. Film Şeridi - Bölüm 2</h2>
-                        <div class="flex gap-4 mb-4">
-                            <div class="drop-zone group" data-name="07_Sayfa">
-                                <input type="file" name="07_Sayfa" class="hidden input-file" accept="image/*">
-                                <div class="text-center z-0"><span class="text-xl mb-1 block">🎞️</span><span
-                                        class="text-[10px] font-bold text-slate-500">Şerit</span></div>
-                                <div class="preview-layer"></div>
-                                <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                    </svg></button>
-                            </div>
-                            <div class="input-group">
-                                <input type="text" name="Text_07_Sayfa" placeholder="Etiket (Max 10)" maxlength="10"
-                                    class="input-track">
-                                <button type="button" class="magic-btn" onclick="openMagicModal('Text_07_Sayfa')"
-                                    title="Hazır Mesaj">✨</button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="section-card">
-                    <img src="/examples/spotify_ve_netflix.jpg" class="section-img" alt="Loveflix">
-                    <div class="section-content">
-                        <h2 class="section-title text-red-600">5. Bizim Filmimiz (Loveflix)</h2>
-                        <div class="flex gap-4 mb-4">
-                            <div class="drop-zone group" data-name="08_Sayfa">
-                                <input type="file" name="08_Sayfa" class="hidden input-file" accept="image/*">
-                                <div class="text-center z-0"><span class="text-xl mb-1 block">🎬</span><span
-                                        class="text-[10px] font-bold text-slate-500">Posteri</span></div>
-                                <div class="preview-layer"></div>
-                                <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                    </svg></button>
-                            </div>
-                            <div class="flex-1 space-y-3">
-                                <div class="input-group">
-                                    <input type="text" name="Text_Film_Baslik" placeholder="Film Başlığı (Max 24)"
-                                        maxlength="24" class="input-track">
-                                    <button type="button" class="magic-btn" onclick="openMagicModal('Text_Film_Baslik')"
-                                        title="Hazır Mesaj">✨</button>
-                                </div>
-                                <input type="text" name="Text_Film_Turler" placeholder="Tür (Max 17)" maxlength="17"
-                                    class="input-track">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3 mb-3">
-                            <input type="text" name="Text_Film_Oyuncu_1" placeholder="Oyuncu 1 (Max 15)" maxlength="15"
-                                class="input-track">
-                            <input type="text" name="Text_Film_Oyuncu_2" placeholder="Oyuncu 2 (Max 15)" maxlength="15"
-                                class="input-track">
-                        </div>
-                        <div class="input-group">
-                            <input type="text" name="Text_Film_Aciklama" placeholder="Film Konusu (Max 320)"
-                                maxlength="320" class="input-track">
-                            <button type="button" class="magic-btn" onclick="openMagicModal('Text_Film_Aciklama')"
-                                title="Hazır Mesaj">✨</button>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="section-card">
-                    <img src="/examples/spotify_ve_netflix.jpg" class="section-img grayscale opacity-90" alt="Spotify">
-                    <div class="section-content">
-                        <h2 class="section-title text-green-600">6. Bizim Şarkımız (Spotify)</h2>
-                        <div class="flex gap-4 mb-4">
-                            <div class="drop-zone group" data-name="09_Sayfa">
-                                <input type="file" name="09_Sayfa" class="hidden input-file" accept="image/*">
-                                <div class="text-center z-0"><span class="text-xl mb-1 block">🎵</span><span
-                                        class="text-[10px] font-bold text-slate-500">Albüm</span></div>
-                                <div class="preview-layer"></div>
-                                <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                    </svg></button>
-                            </div>
-                            <div class="flex-1 space-y-3 self-center">
-                                <input type="text" name="Text_Sarki_Ad" placeholder="Şarkı Adı (Max 17)" maxlength="17"
-                                    class="input-track">
-                                <input type="text" name="Text_Sarki_Sanatci" placeholder="Sanatçı (Max 26)"
-                                    maxlength="26" class="input-track">
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="section-card">
-                    <img src="/examples/kamera_ve_selfie.jpg" class="section-img" alt="Kamera">
-                    <div class="section-content">
-                        <h2 class="section-title text-slate-700">7. Kamera Arkası (10. Sayfa)</h2>
-                        <div class="drop-zone w-32 h-32 group" data-name="10_Sayfa">
-                            <input type="file" name="10_Sayfa" class="hidden input-file" accept="image/*">
-                            <div class="text-center z-0"><span class="text-3xl mb-1 block">📷</span><span
-                                    class="text-[10px] font-bold text-slate-500">Fotoğraf</span></div>
-                            <div class="preview-layer"></div>
-                            <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="3">
-                                    <path d="M18 6 6 18" />
-                                    <path d="m6 6 12 12" />
-                                </svg></button>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="section-card">
-                    <img src="/examples/kamera_ve_selfie.jpg" class="section-img grayscale opacity-90" alt="Selfie">
-                    <div class="section-content">
-                        <h2 class="section-title text-rose-500">8. Selfie Zamanı (11. Sayfa)</h2>
-                        <div class="drop-zone w-32 h-32 group" data-name="11_Sayfa">
-                            <input type="file" name="11_Sayfa" class="hidden input-file" accept="image/*">
-                            <div class="text-center z-0"><span class="text-3xl mb-1 block">🤳</span><span
-                                    class="text-[10px] font-bold text-slate-500">Selfie</span></div>
-                            <div class="preview-layer"></div>
-                            <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="3">
-                                    <path d="M18 6 6 18" />
-                                    <path d="m6 6 12 12" />
-                                </svg></button>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="section-card">
-                    <img src="/examples/film_tuneli_1_ve_2.jpg" class="section-img" alt="Film Tüneli 1">
-                    <div class="section-content">
-                        <h2 class="section-title text-purple-600">9. Zaman Tüneli - Bölüm 1</h2>
-                        <div class="flex gap-4 mb-4">
-                            <div class="drop-zone group" data-name="14_Sayfa">
-                                <input type="file" name="14_Sayfa" class="hidden input-file" accept="image/*">
-                                <div class="text-center z-0"><span class="text-xl mb-1 block">🎞️</span><span
-                                        class="text-[10px] font-bold text-slate-500">Tünel</span></div>
-                                <div class="preview-layer"></div>
-                                <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                    </svg></button>
-                            </div>
-                            <div class="input-group">
-                                <input type="text" name="Text_14_Sayfa_Ust" placeholder="Bölüm Başlığı (Max 23)"
-                                    maxlength="23" class="input-track">
-                                <button type="button" class="magic-btn" onclick="openMagicModal('Text_14_Sayfa_Ust')"
-                                    title="Hazır Mesaj">✨</button>
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <textarea name="Text_14_Sayfa_Alt" placeholder="Bu anın hikayesi nedir? (Max 150)"
-                                maxlength="150" rows="2" class="input-track resize-none"></textarea>
-                            <button type="button" class="magic-btn h-full" onclick="openMagicModal('Text_14_Sayfa_Alt')"
-                                title="Hazır Mesaj">✨</button>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="section-card">
-                    <img src="/examples/film_tuneli_1_ve_2.jpg" class="section-img grayscale opacity-90"
-                        alt="Film Tüneli 2">
-                    <div class="section-content">
-                        <h2 class="section-title text-purple-600">10. Zaman Tüneli - Bölüm 2</h2>
-                        <div class="flex gap-4 mb-4">
-                            <div class="drop-zone group" data-name="15_Sayfa">
-                                <input type="file" name="15_Sayfa" class="hidden input-file" accept="image/*">
-                                <div class="text-center z-0"><span class="text-xl mb-1 block">🎞️</span><span
-                                        class="text-[10px] font-bold text-slate-500">Tünel</span></div>
-                                <div class="preview-layer"></div>
-                                <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                    </svg></button>
-                            </div>
-                            <div class="input-group">
-                                <input type="text" name="Text_15_Sayfa_Ust" placeholder="Bölüm Başlığı (Max 23)"
-                                    maxlength="23" class="input-track">
-                                <button type="button" class="magic-btn" onclick="openMagicModal('Text_15_Sayfa_Ust')"
-                                    title="Hazır Mesaj">✨</button>
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <textarea name="Text_15_Sayfa_Alt" placeholder="Peki ya sonra ne oldu? (Max 150)"
-                                maxlength="150" rows="2" class="input-track resize-none"></textarea>
-                            <button type="button" class="magic-btn h-full" onclick="openMagicModal('Text_15_Sayfa_Alt')"
-                                title="Hazır Mesaj">✨</button>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="section-card">
-                    <img src="/examples/arka_kapak.jpg" class="section-img" alt="Arka Kapak">
-                    <div class="section-content">
-                        <h2 class="section-title text-rose-600">11. Mutlu Son (Arka Kapak)</h2>
-                        <div class="flex gap-4 mb-4">
-                            <div class="drop-zone group" data-name="16_Sayfa">
-                                <input type="file" name="16_Sayfa" class="hidden input-file" accept="image/*">
-                                <div class="text-center z-0"><span class="text-2xl mb-1 block">🏁</span><span
-                                        class="text-[10px] font-bold text-slate-500 uppercase">Son!</span></div>
-                                <div class="preview-layer"></div>
-                                <button class="delete-btn hidden"><svg width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                    </svg></button>
-                            </div>
-                            <div class="input-group">
-                                <input type="text" name="Text_Arka_Baslik" placeholder="Kapanış Sözü (Max 10)"
-                                    maxlength="10" class="input-track">
-                                <button type="button" class="magic-btn" onclick="openMagicModal('Text_Arka_Baslik')"
-                                    title="Hazır Mesaj">✨</button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section
-                    class="section-card bg-orange-50/50 border-orange-100 flex-col md:flex-col items-center text-center p-8">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-2">12. Diğer Fotoğraflarınız Buraya</h2>
-                    <p class="text-slate-500 mb-6 max-w-lg">Kitabın geri kalanı için en güzel anılarınızdan 25-40 adet
-                        fotoğraf seçin. Gerisini biz tasarlayalım.</p>
-
-                    <div class="relative bg-white w-full max-w-md aspect-video rounded-xl border-2 border-dashed border-orange-300 shadow-sm flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 hover:border-orange-500 transition group"
-                        id="bulkDropZone">
-                        <input type="file" name="12_Genel_Photos" multiple
-                            class="absolute inset-0 opacity-0 cursor-pointer z-10" id="bulkInput" accept="image/*">
-                        <span class="text-5xl mb-3 block group-hover:scale-110 transition">📂</span>
-                        <span
-                            class="px-6 py-2 bg-orange-600 text-white font-bold rounded-full text-sm shadow-md group-hover:bg-orange-700 transition">Toplu
-                            Fotoğraf Seç</span>
-                        <p id="bulkCount" class="mt-4 font-bold text-slate-800 text-lg hidden">0 Dosya Seçildi</p>
-                    </div>
-                </section>
-
-                <button type="submit"
-                    class="w-full bg-slate-900 text-white font-bold py-6 rounded-2xl text-xl shadow-xl hover:bg-orange-600 hover:scale-[1.005] transition duration-300 flex items-center justify-center gap-3">
-                    ✨ Kitabımı Ve Anılarımı Oluştur
-                </button>
-
-            </form>
         </div>
     </div>
 
-    <script>
-        // ============================================
-        // 1. TOKEN VE MÜŞTERİ DOĞRULAMA (EPIC 3 - Token System)
-        // ============================================
-        (function initToken() {
-            const urlPath = window.location.pathname;
-            // URL sonundaki token'ı yakala (/o/TOKEN_KODU)
-            const tokenMatch = urlPath.match(/\/o\/([a-f0-9]+)$/);
+    <!-- How It Works Section -->
+    <div class="py-20 px-4 bg-white">
+        <div class="max-w-5xl mx-auto">
 
-            if (tokenMatch && tokenMatch[1]) {
-                const token = tokenMatch[1];
-                const tokenInput = document.getElementById('tokenField');
-                const infoText = document.getElementById('tokenInfo');
+            <h2 class="text-4xl font-bold text-center text-slate-800 mb-12">
+                Nasıl Çalışır?
+            </h2>
 
-                if (tokenInput) tokenInput.value = token;
-                if (infoText) infoText.classList.remove('hidden');
+            <div class="grid md:grid-cols-3 gap-8">
 
-                // Backend API'den müşteri verisini çek (Epic 3.2)
-                fetch(`/api/token/${token}`)
-                    .then(res => res.json())
-                    .then(result => {
-                        if (result.success) {
-                            const nameField = document.getElementById('customerNameField');
-                            if (nameField) {
-                                nameField.value = result.customerName;
-                                nameField.setAttribute('readonly', true);
-                                nameField.classList.add('bg-slate-100', 'cursor-not-allowed');
-                                // Progress bar'ın güncellenmesi için input event tetikle
-                                nameField.dispatchEvent(new Event('input', { bubbles: true }));
-                            }
-                            console.log('✓ Token başarıyla doğrulandı: ' + result.customerName);
-                        } else {
-                            console.error('Token hatası:', result.error);
-                            // Token geçersizse kullanıcı uyarılabilir veya yönlendirilebilir
-                        }
-                    })
-                    .catch(err => {
-                        console.error('API Bağlantı Hatası:', err);
-                    });
-            }
-        })();
+                <div class="text-center">
+                    <div
+                        class="bg-gradient-to-br from-purple-500 to-pink-500 w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg">
+                        1
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Özel Link Alın</h3>
+                    <p class="text-slate-600">
+                        Admin panelinden sizin için özel bir sipariş linki oluşturulur
+                    </p>
+                </div>
 
-        // ============================================
-        // 2. GLOBAL FONKSİYONLAR (Issue #3 Fix: Global Scope)
-        // ============================================
+                <div class="text-center">
+                    <div
+                        class="bg-gradient-to-br from-blue-500 to-cyan-500 w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg">
+                        2
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Fotoğrafları Yükleyin</h3>
+                    <p class="text-slate-600">
+                        En sevdiğiniz anıları ve metinleri kolayca sisteme ekleyin
+                    </p>
+                </div>
 
-        const MESSAGE_TEMPLATES = {
-            "Text_Ana_Baslik": {
-                romantic: ["Sonsuz Aşk", "Ruh Eşim", "Bizimkisi", "Aşk", "Canım", "Sevdam", "Huzurum", "Miladım", "Tek Gerçek", "Sol Yanım"],
-                emotional: ["Mucizem", "Nefesim", "Ömrüm", "İyi ki...", "Kıymetlim", "Her Şeyim", "Dünyam", "Meleğim", "Can Özüm", "Hayatım"],
-                funny: ["Baş Belam", "Patron", "Olay Var", "Tımarhane", "Vukuat", "Suç Ortak", "Gıcık", "Belalım", "Şapşik", "Kedik"]
-            },
-            "Text_03_Sayfa": {
-                romantic: ["Sen benim en güzel manzaramsın.", "Gülüşün dünyaya bedel.", "Sonsuza kadar sadece sen.", "Kalbim senin evin olsun.", "Her şey seninle güzel.", "Aşk, senin adın.", "Gözlerin ömre bedel.", "Seninle atan kalbim var.", "Dünyam sensin sevgilim.", "Seni seviyorum."],
-                emotional: ["Bazı ruhlar evvelden aşinadır.", "Yanında zaman dursun istiyorum.", "Sen benim kabul olmuş duamsın.", "Varlığın bana en büyük hediye.", "Sensiz bir an bile zor.", "Kalbimde yerin hep ayrı.", "Huzurun ta kendisisin.", "İyi ki doğdun yüreğime.", "Seninle geçen her an lütuf.", "Eksik parçam sensin."],
-                funny: ["Beni benden alırsan seni...", "Yemekten sonra en sevdiğimsin.", "Şifresi çözülemeyen tek sırrım.", "Birlikteyken diyet bozulur.", "Tatlım, tuzlum, ekşim.", "Seninle delirmek güzel.", "Gıcık ama benim gıcığım.", "Kapat gözlerini, sev beni.", "Aşk karın doyurmaz ama...", "Arızalı bir aşk bizimkisi."]
-            },
-            "Text_06_Sayfa": {
-                romantic: ["Huzurum", "Nefesim", "Sol yanım", "Sonsuzum", "Aşkım", "Sevgilim", "Bitanem", "Herşeyim", "Meleğim", "Canım"],
-                emotional: ["Can özüm", "Kıymetlim", "Her şeyim", "Mevsimim", "Yuvam", "Ömrüm", "Kalbime", "Ruhum", "Cennetim", "Nefes"],
-                funny: ["Belalım", "Gıcık", "Oburum", "Kedik", "Şapşik", "Deli", "Lazım", "Kısmet", "Patron", "Zalım"]
-            },
-            "Text_07_Sayfa": {
-                romantic: ["Bir Ömür", "Seninle", "Daima", "Tutkum", "Meleğim", "Prenses", "Prens", "Aşk", "Kalp", "Biricik"],
-                emotional: ["Kalbimin", "Dünyam", "Hayatım", "Güneşim", "Mucizem", "Yıldızım", "Gecem", "Gündüz", "Tekim", "Sevdam"],
-                funny: ["Zehirli Ok", "Suç Ortağı", "Tımarhane", "Vukuat", "Patron", "Şef", "Müdür", "Olay", "Fena", "Bomba"]
-            },
-            "Text_Film_Baslik": {
-                romantic: ["Aşkımızın Filmi", "Sonsuz Senaryo", "Bizim Hikayemiz", "En Güzel Sahnemiz", "Romantik Komedimiz", "Aşk Tesadüfleri Sever", "Mutluluk Zamanı", "Sadece Sen ve Ben", "Hayatımın Başrolü", "Unutulmaz Anlar"],
-                emotional: ["Kalbimdeki İmza", "Sessiz Çığlık", "Derin Bir Bakış", "Yol Arkadaşım", "Hayat Ağacım", "Kader Bağım", "Ruhumun Aynası", "Beklenen Gün", "Sevgi Yolu", "Umut Işığı"],
-                funny: ["Evde Tek Başına Biz", "Yine Mi Sen?", "Eyvah Aşk Geldi", "Çılgın Aşıklar", "Deli ile Veli", "Tencere Kapak", "Aşk Grevi", "Tatlı Bela", "Firari Aşk", "Komedi Dükkanı"]
-            },
-            "Text_Film_Aciklama": {
-                romantic: ["Sıradan bir günün, hayatımın en güzel hikayesine dönüştüğü o an... Seninle başlayan her gün, mutlu sonla biten bir film gibi. Sen benim başrolüm, yönetmenim ve en sadık izleyicimsin. Bu film hiç bitmesin.", "Gözlerinde kaybolduğum, her karesinde aşkı yeniden keşfettiğim bir serüven. Bu hikaye hiç bitmesin, jenerik hiç akmasın istiyorum. Seni çok seviyorum. Birlikte nice güzel bölümlere."],
-                emotional: ["Bazen kelimeler yetmez, sadece bakışlar konuşur. Hayatımın en zor anlarında elimi tutan, en mutlu anlarımda kahkahama ortak olan canım sevgilim. İyi ki yollarımız kesişti.", "Bir tesadüfün hayatımı nasıl değiştirdiğinin kanıtı. Seninle geçen her saniye, ömrüme ömür katıyor. Varlığına her gün şükrediyorum. Sen benim en güzel iyikimsin."],
-                funny: ["Romantik komedi tadında bir hayatımız var. Bazen kavga, bazen gürültü ama bolca kahkaha! Oscar ödülü alamayız belki ama 'En İyi Çift' ödülü kesinlikle bizim. Mısırları hazırlayın!", "Başrolde dünyanın en güzel/yakışıklı insanı ve onun kaprisini çeken ben! Şaka bir yana, seninle aksiyon da güzel, dram da. Ama en çok komedi yakışıyor bize."]
-            },
-            "Text_14_Sayfa_Ust": {
-                romantic: ["Zaman Durdu", "Aşk Tüneli", "Geçmişten Geleceğe", "Unutulmaz An", "İlk Bakış", "O Gün", "Sihirli An", "Bizim Saatimiz", "Milat", "Başlangıç"],
-                emotional: ["Hatıralar", "İz Bırakan", "Kalbe Dokunan", "Dönüm Noktası", "Gözyaşı ve Gülüş", "Kıymetli", "Özel Gün", "Saklı An", "Derin", "Hisli"],
-                funny: ["O Gün Ne Yedik?", "Karnımız Açtı", "Gülmekten Öldük", "Tipimize Bak", "Şaka Gibi", "Komik An", "Yine Olay", "Firarda", "Yakalandık", "Ofise Dönüş"]
-            },
-            "Text_14_Sayfa_Alt": {
-                romantic: ["Zaman tünelinde kaybolsam, yine seni bulurdum. Geçmişim de sensin, geleceğim de. Seninle geçen her saniye çok değerli.", "Seninle geçen her an, hafızama kazınan en değerli hazine. İyi ki varsın, iyi ki seni tanıdım."],
-                emotional: ["Baktıkça içimin titrediği o anlar... Geriye dönüp baktığımda 'İyi ki' dediğim tek şeysin. Seni tanımak en büyük şansım.", "Hayat kısa, kuşlar uçuyor ve ben seni her geçen gün daha çok seviyorum. Bu fotoğraf aşkımızın tanığı."],
-                funny: ["Bakışlara bak, sanki dünyayı kurtarmışız. Halbuki sadece acıkmıştık. Ne günlerdi ama!", "Bu fotoğrafta ne kadar güzel çıkmışsın, ben de fena değilim hani! Yine karizmamız yerinde."]
-            },
-            "Text_15_Sayfa_Ust": {
-                romantic: ["Geleceğimiz", "Sonsuzluk", "Yarınlar Bizim", "Hayallerimiz", "Birlikte", "El Ele", "Yolumuz Bir", "Aydınlık", "Umut", "Sevgi"],
-                emotional: ["Umut Dolu", "Dua Gibi", "Güven", "Sadakat", "Bağlılık", "Sözümüz", "Yemin", "Kader", "Alınyazısı", "İnanç"],
-                funny: ["Zengin Olacağız", "Diyet Başlıyor", "Spor Zamanı", "Gezginler", "Yine Yemek", "Uyku Vakti", "Proje", "Planlar", "Kaçış", "Tatil"]
-            },
-            "Text_15_Sayfa_Alt": {
-                romantic: ["Yarınlar seninle güzel. Elim elinde olduğu sürece her yolun sonu çiçekli bahçe. Seni çok seviyorum.", "Sadece bugün değil, son nefesime kadar yanındayım. Seni çok seviyorum, iyi ki hayatımdasın."],
-                emotional: ["Sen benim güvenli limanım, fırtınada sığındığım tek yersin. Varlığın güç veriyor sevgilim.", "Bir fotoğraf karesine sığmayan kocaman bir aşk bizimkisi. İyi ki biz olduk, iyi ki birbirimizi bulduk."],
-                funny: ["Birlikte yaşlanacağız dedik, yaşlanıyoruz da... Ama hala çok genciz be! Ruhumuz 18 hala.", "Gelecekte torunlara gösterip 'Dedemiz ne yakışıklıymış' dedirteceğimiz o kare. Sakla bunu!"]
-            },
-            "Text_Arka_Baslik": {
-                romantic: ["Sonsuza", "Aşkla Kal", "Mutlu Son", "Biz", "Daima", "Bitmedi", "En Baştan", "Sen & Ben", "Huzur", "Sevgiyle"],
-                emotional: ["Unutma", "Kalbimdesin", "Özlemle", "Dualarım", "Şükür", "Tek Çare", "Saygıyla", "Hoşçakal", "Emanet", "Can"],
-                funny: ["The End", "Bitti", "Dağılın", "Perde", "Kestik", "Film Bitti", "Yemek?", "Uyku", "Son", "Devam..."]
-            }
-        };
+                <div class="text-center">
+                    <div
+                        class="bg-gradient-to-br from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg">
+                        3
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Anı Defterinizi Alın</h3>
+                    <p class="text-slate-600">
+                        Profesyonel tasarım ve baskı sonrası elinizde olsun
+                    </p>
+                </div>
 
-        let currentInputName = '';
-        let currentCategory = 'romantic';
+            </div>
 
-        function openMagicModal(inputName) {
-            if (!MESSAGE_TEMPLATES[inputName]) {
-                if (inputName.includes('Oyuncu')) {
-                    alert("Oyuncu isimleri kişiseldir, lütfen elle giriniz.");
-                    return;
-                }
-                alert("Bu alan için hazır mesaj bulunmuyor.");
-                return;
-            }
+        </div>
+    </div>
 
-            currentInputName = inputName;
-            const modalTargetName = document.getElementById('modalTargetName');
-            if (modalTargetName) {
-                modalTargetName.innerText = inputName;
-                modalTargetName.classList.remove('hidden');
-            }
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-12 px-4">
+        <div class="max-w-5xl mx-auto text-center">
+            <p class="text-slate-400 mb-4">
+                © 2026 EkoPortalHane - Tüm hakları saklıdır
+            </p>
+            <p class="text-slate-500 text-sm">
+                Anılarınız bizim için değerli ❤️
+            </p>
+        </div>
+    </footer>
 
-            document.getElementById('magicModal').classList.remove('hidden');
-            document.getElementById('magicModal').style.display = 'flex';
-            switchTab('romantic');
-        }
-
-        function closeMagicModal() {
-            document.getElementById('magicModal').classList.add('hidden');
-            document.getElementById('magicModal').style.display = 'none';
-        }
-
-        function switchTab(category) {
-            currentCategory = category;
-
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.innerText.toLowerCase().includes(category === 'romantic' ? 'romantik' : category === 'emotional' ? 'duygusal' : 'komik')) {
-                    btn.classList.add('active');
-                }
-            });
-
-            const list = document.getElementById('suggestionList');
-            list.innerHTML = '';
-
-            const messages = MESSAGE_TEMPLATES[currentInputName] ? MESSAGE_TEMPLATES[currentInputName][category] : [];
-
-            if (messages && messages.length > 0) {
-                messages.forEach(msg => {
-                    const div = document.createElement('div');
-                    div.className = 'suggestion-chip';
-                    div.innerText = msg;
-                    div.onclick = () => selectMessage(msg);
-                    list.appendChild(div);
-                });
-            } else {
-                list.innerHTML = '<p class="text-center text-slate-400 p-4">Bu kategori için mesaj yok.</p>';
-            }
-        }
-
-        function selectMessage(text) {
-            const input = document.querySelector(`[name="${currentInputName}"]`);
-            if (input) {
-                const maxLength = input.getAttribute('maxlength');
-                if (maxLength && text.length > parseInt(maxLength)) {
-                    alert(`Bu mesaj çok uzun! (${text.length} karakter). Bu alan en fazla ${maxLength} karakter alabilir.`);
-                    return;
-                }
-
-                input.value = text;
-                // Progress Bar ve Sayaçları güncelle
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                closeMagicModal();
-            }
-        }
-
-        // ============================================
-        // 3. DOM YÜKLENDİKTEN SONRA ÇALIŞACAKLAR
-        // ============================================
-        document.addEventListener('DOMContentLoaded', function () {
-
-            // Modal dışına tıklama
-            const magicModal = document.getElementById('magicModal');
-            if (magicModal) {
-                magicModal.addEventListener('click', (e) => {
-                    if (e.target === magicModal) closeMagicModal();
-                });
-            }
-
-            // Karakter Sayacı
-            document.querySelectorAll('.input-track').forEach(input => {
-                input.addEventListener('input', function () {
-                    const maxLength = this.getAttribute('maxlength');
-                    if (!maxLength) return;
-                    const currentLength = this.value.length;
-
-                    let counter = this.parentElement.querySelector('.char-counter');
-                    if (!counter) {
-                        counter = document.createElement('span');
-                        counter.className = 'char-counter text-xs text-slate-400 absolute right-2 bottom-[-20px]';
-                        this.parentElement.style.position = 'relative';
-                        this.parentElement.appendChild(counter);
-                    }
-
-                    counter.textContent = `${currentLength}/${maxLength}`;
-                    counter.style.color = currentLength > maxLength * 0.9 ? '#ef4444' : '#64748b';
-                });
-            });
-
-            // Dosya Yönetimi (Drop Zones) - Epic 2 (Upload Security)
-            const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB Sınırı
-
-            document.querySelectorAll('.drop-zone').forEach(zone => {
-                const input = zone.querySelector('input');
-                const preview = zone.querySelector('.preview-layer');
-                const delBtn = zone.querySelector('.delete-btn');
-
-                zone.addEventListener('click', (e) => {
-                    if (e.target !== delBtn && !delBtn.contains(e.target)) input.click();
-                });
-
-                input.addEventListener('change', () => {
-                    if (input.files && input.files[0]) handleFile(input.files[0], preview, delBtn, input);
-                });
-
-                delBtn.addEventListener('click', (e) => {
-                    e.preventDefault(); e.stopPropagation();
-                    input.value = "";
-                    preview.style.backgroundImage = 'none';
-                    preview.style.opacity = '0';
-                    delBtn.classList.add('hidden');
-                    updateProgress();
-                });
-
-                zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
-                ['dragleave', 'dragend', 'drop'].forEach(evt => {
-                    zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.remove('drag-over'); });
-                });
-                zone.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    if (e.dataTransfer.files.length) {
-                        input.files = e.dataTransfer.files;
-                        handleFile(e.dataTransfer.files[0], preview, delBtn, input);
-                    }
-                });
-            });
-
-            function handleFile(file, preview, delBtn, input) {
-                if (!file) return;
-                if (file.size > MAX_FILE_SIZE) {
-                    alert("Uyarı: Bu fotoğraf çok büyük! (20MB+). Lütfen daha küçüğünü seçin.");
-                    input.value = "";
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    preview.style.backgroundImage = `url('${e.target.result}')`;
-                    preview.style.opacity = '1';
-                    delBtn.classList.remove('hidden');
-                    updateProgress();
-                };
-                reader.readAsDataURL(file);
-            }
-
-            // Toplu Yükleme (Bulk)
-            const bulkInput = document.getElementById('bulkInput');
-            if (bulkInput) {
-                bulkInput.addEventListener('change', () => {
-                    const files = Array.from(bulkInput.files);
-                    if (files.some(f => f.size > MAX_FILE_SIZE)) {
-                        alert("Bazı dosyalar 20MB sınırını aşıyor. Lütfen kontrol edin.");
-                        bulkInput.value = ""; return;
-                    }
-                    const countLabel = document.getElementById('bulkCount');
-                    countLabel.innerText = `${files.length} Dosya Seçildi`;
-                    countLabel.classList.remove('hidden');
-                    updateProgress();
-                });
-            }
-
-            // Progress Bar (Issue #4 ve UX)
-            window.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && e.target.nodeName !== 'TEXTAREA') e.preventDefault();
-            });
-
-            function updateProgress() {
-                const inputs = document.querySelectorAll('.input-track');
-                const fileInputs = document.querySelectorAll('.input-file');
-                let total = inputs.length + fileInputs.length;
-                if (bulkInput) total += 1;
-
-                let filled = 0;
-                inputs.forEach(i => { if (i.value.trim() !== '') filled++; });
-                fileInputs.forEach(i => { if (i.files.length > 0) filled++; });
-                if (bulkInput && bulkInput.files.length > 0) filled++;
-
-                const percent = total > 0 ? Math.round((filled / total) * 100) : 0;
-                const progBar = document.getElementById('progressBar');
-                const progText = document.getElementById('progressText');
-
-                if (progBar) progBar.style.width = `${percent}%`;
-                if (progText) progText.innerText = `${percent}%`;
-            }
-            document.querySelectorAll('input, textarea').forEach(i => i.addEventListener('input', updateProgress));
-
-            // FORM GÖNDERME (autoForm ID'si kullanılarak)
-            const form = document.getElementById('autoForm');
-            if (form) {
-                form.addEventListener('submit', async function (e) {
-                    e.preventDefault();
-
-                    // Client-Side Validation (Epic 2)
-                    const customerNameInput = document.querySelector('[name="musteri_adi"]');
-                    if (!customerNameInput || !customerNameInput.value.trim()) {
-                        alert("⚠️ Müşteri adı zorunludur!");
-                        customerNameInput?.focus();
-                        return;
-                    }
-
-                    const coverPhotoInput = document.querySelector('[name="01_Sayfa"]');
-                    if (!coverPhotoInput || !coverPhotoInput.files || coverPhotoInput.files.length === 0) {
-                        alert("⚠️ Kapak fotoğrafı (01_Sayfa) zorunludur!");
-                        document.querySelector('[data-name="01_Sayfa"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        return;
-                    }
-
-                    if (!confirm("Siparişinizi oluşturmak üzeresiniz. Her şeyin doğru olduğundan emin misiniz?")) return;
-
-                    // Visual Feedback (Overlay)
-                    const overlay = document.getElementById('loadingOverlay');
-                    overlay.classList.remove('hidden');
-
-                    const btn = this.querySelector('button[type="submit"]');
-                    btn.disabled = true;
-
-                    const formData = new FormData(this);
-
-                    try {
-                        // Backend API Çağrısı
-                        const res = await fetch('/api/olustur', { method: 'POST', body: formData });
-                        const result = await res.json();
-
-                        if (result.success && result.orderId) {
-                            overlay.innerHTML = `
-                            <div class="bg-white p-10 rounded-3xl flex flex-col items-center shadow-2xl max-w-md w-full text-center">
-                                <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-full flex items-center justify-center text-4xl mb-6 shadow-lg">✓</div>
-                                <h3 class="text-3xl font-bold text-slate-800 mb-3">🎉 Sipariş Başarılı!</h3>
-                                <p class="text-slate-600 mb-6">Siparişiniz başarıyla oluşturuldu.</p>
-                                
-                                <div class="w-full bg-orange-50 border-2 border-orange-200 rounded-xl p-4 mb-4">
-                                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Sipariş Numaranız</p>
-                                    <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-orange-300">
-                                        <code id="orderIdDisplay" class="flex-1 text-lg font-bold text-slate-800 font-mono select-all">${result.orderId}</code>
-                                        <button onclick="copyOrderId('${result.orderId}')" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-bold transition flex items-center gap-2 shadow-md">
-                                            📋 Kopyala
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <p class="text-sm text-slate-500 mb-6">💡 Bu numarayı kaydedin ve WhatsApp'tan paylaşabilirsiniz.</p>
-                                
-                                <button onclick="window.location.reload()" class="w-full px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-base font-bold transition shadow-lg">
-                                    Kapat
-                                </button>
-                            </div>
-                          `;
-                        } else {
-                            throw new Error(result.error || "Bilinmeyen hata oluştu.");
-                        }
-                    } catch (error) {
-                        overlay.classList.add('hidden');
-                        alert("❌ Hata: " + error.message);
-                        btn.disabled = false;
-                    }
-                });
-            } else {
-                console.error("HATA: 'autoForm' bulunamadı! HTML ID'sini kontrol edin.");
-            }
-
-            // Copy Order ID (Global)
-            window.copyOrderId = function (orderId) {
-                navigator.clipboard.writeText(orderId).then(() => {
-                    alert('✅ Sipariş numarası kopyalandı!\n\n' + orderId);
-                }).catch(err => {
-                    const textArea = document.createElement('textarea');
-                    textArea.value = orderId;
-                    textArea.style.position = 'fixed';
-                    textArea.style.opacity = '0';
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    alert('✅ Sipariş numarası kopyalandı!\n\n' + orderId);
-                });
-            }
-        });
-    </script>
 </body>
 
 </html>
