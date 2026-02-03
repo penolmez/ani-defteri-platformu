@@ -119,6 +119,13 @@
                         placeholder="İsim ve Soyisim">
                     <p id="tokenInfo" class="hidden mt-4 text-sm text-slate-500">
                         🔒 Bu link sizin için özel olarak oluşturulmuştur
+                        <br>
+                        🖼️ Doldurmadığınız fotoğraf alanları sayfanın en altında bulunan toplu görsel yükleme alanına
+                        yüklediğiniz görsellerden seçilecektir.
+                        <br>
+                        🖹 Doldurmadığınız metin alanları varsayılan taslaktaki metinlerle doldurulacaktır.
+                        <br>
+                        ✨ Hazır mesajlar için tıklayınız.
                     </p>
                 </div>
 
@@ -439,7 +446,7 @@
                 <section
                     class="section-card bg-orange-50/50 border-orange-100 flex-col md:flex-col items-center text-center p-8">
                     <h2 class="text-2xl font-bold text-slate-800 mb-2">12. Diğer Fotoğraflarınız Buraya</h2>
-                    <p class="text-slate-500 mb-6 max-w-lg">Kitabın geri kalanı için en güzel anılarınızdan 25-40 adet
+                    <p class="text-slate-500 mb-6 max-w-lg">Kitabın geri kalanı için en güzel anılarınızdan 15-60 adet
                         fotoğraf seçin. Gerisini biz tasarlayalım.</p>
 
                     <div class="relative bg-white w-full max-w-md aspect-video rounded-xl border-2 border-dashed border-orange-300 shadow-sm flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 hover:border-orange-500 transition group"
@@ -676,6 +683,8 @@
 
             // Dosya Yönetimi (Drop Zones) - Epic 2 (Upload Security)
             const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB Sınırı
+            const MIN_BULK_FILES = 15; // Minimum toplu yükleme dosya sayısı
+            const MAX_BULK_FILES = 60; // Maksimum toplu yükleme dosya sayısı
 
             document.querySelectorAll('.drop-zone').forEach(zone => {
                 const input = zone.querySelector('input');
@@ -734,10 +743,28 @@
             if (bulkInput) {
                 bulkInput.addEventListener('change', () => {
                     const files = Array.from(bulkInput.files);
+
+                    // Minimum dosya sayısı kontrolü
+                    if (files.length > 0 && files.length < MIN_BULK_FILES) {
+                        alert(`⚠️ En az ${MIN_BULK_FILES} fotoğraf yüklemelisiniz!\n\nSeçtiğiniz dosya sayısı: ${files.length}\n\nLütfen daha fazla fotoğraf seçin.`);
+                        bulkInput.value = "";
+                        return;
+                    }
+
+                    // Maksimum dosya sayısı kontrolü
+                    if (files.length > MAX_BULK_FILES) {
+                        alert(`⚠️ En fazla ${MAX_BULK_FILES} fotoğraf yükleyebilirsiniz!\n\nSeçtiğiniz dosya sayısı: ${files.length}\n\nLütfen daha az fotoğraf seçin.`);
+                        bulkInput.value = "";
+                        return;
+                    }
+
+                    // Dosya boyutu kontrolü
                     if (files.some(f => f.size > MAX_FILE_SIZE)) {
                         alert("Bazı dosyalar 20MB sınırını aşıyor. Lütfen kontrol edin.");
-                        bulkInput.value = ""; return;
+                        bulkInput.value = "";
+                        return;
                     }
+
                     const countLabel = document.getElementById('bulkCount');
                     countLabel.innerText = `${files.length} Dosya Seçildi`;
                     countLabel.classList.remove('hidden');
@@ -784,13 +811,14 @@
                         return;
                     }
 
+                    /*
                     const coverPhotoInput = document.querySelector('[name="01_Sayfa"]');
                     if (!coverPhotoInput || !coverPhotoInput.files || coverPhotoInput.files.length === 0) {
                         alert("⚠️ Kapak fotoğrafı (01_Sayfa) zorunludur!");
                         document.querySelector('[data-name="01_Sayfa"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         return;
                     }
-
+                    */
                     if (!confirm("Siparişinizi oluşturmak üzeresiniz. Her şeyin doğru olduğundan emin misiniz?")) return;
 
                     // Visual Feedback (Overlay)
@@ -829,7 +857,7 @@
                                     <p class="text-sm text-blue-700">Bu numarayı güvende tutun! İlerleyen süreçte bizimle iletişime geçtiğinizde bu numarayı kullanarak siparişinizi takip edebilirsiniz.</p>
                                 </div>
                                 
-                                <button onclick="window.location.reload()" class="w-full px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-base font-bold transition shadow-lg">
+                                <button onclick="window.location.href='/'" class="w-full px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-base font-bold transition shadow-lg">
                                     ❤️ Harika! Kapat
                                 </button>
                             </div>
