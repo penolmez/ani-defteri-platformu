@@ -1,0 +1,29 @@
+Text_Film_Baslik: NOT SENİ SEVİYORUM
+Text_Film_Aciklama: Birbirinden habersiz başlayan iki kalbin hikâyesi bu…
+Bazen çok yakın, bazen hayata karşı omuz omuza; ama her zaman aynı yöne bakan iki deli âşık.
+Birbirlerine verdikleri değer, sabır ve sevgiyle hayallerini tek tek gerçeğe dönüştürmeye söz vermiş iki güzel insan…
+
+Kaderin sessizce yolunu çizdiği bu hikâyede kaçmak yok, vazgeçmek hiç yok.
+Çünkü sevgi, emek verildiğinde ve inanıldığında her zorluğu aşar.
+Mücadele etmeyi, birlikte güçlenmeyi ve her düşüşte yeniden ayağa kalkmayı anlatan bir aşk bu.
+
+Berat & Elif’in filmine hoş geldiniz…
+Nice anılara, nice gülüşlere ve birlikte yaşlanacağımız yıllara.
+İyi ki yollarımız kesişti, iyi ki sen 🤍
+Text_Film_Oyuncular: Elif Nur KIZILTAŞ, Berat BALTA
+Text_Film_Turler: Aşk, Romantizm
+Text_Film_Sure: Sonsuza Kadar
+Text_Sarki_Ad: Leyla
+Text_Sarki_Sanatci: Murat Dalkılıç
+Text_14_Sayfa_Ust: seni çoook seviyorum
+Text_14_Sayfa_Alt: My love, every time I come to see you, I will always come with the same excitement as on the first day.
+Text_15_Sayfa_Ust: bİR öMÜR bİRLİKTE
+Text_15_Sayfa_Alt: Yanında geçen her an, geriye dönüp baktığımda yüzümde bir gülümseme bırakan en güzel detay.
+Text_03_Sayfa: Bazı Ruhlar Evvelden Aşinadır Birbirine
+Text_06_Sayfa: Seninle
+Text_07_Sayfa: Bir Ömür
+Text_Ana_Baslik: Our
+Memories
+Text_Arka_Baslik: I
+Love
+You

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EkoPortalHane - Anılarınızı Ölümsüzleştirin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .hero-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+
+    <!-- Hero Section -->
+    <div class="gradient-bg hero-pattern min-h-screen flex items-center justify-center px-4 py-12">
+        <div class="max-w-4xl mx-auto text-center">
+
+            <!-- Logo / Brand -->
+            <div class="mb-8 floating">
+                <div class="inline-block bg-white rounded-3xl p-8 shadow-2xl">
+                    <img src="img/eko_portal_hane.png" alt="EkoPortalHane Logo" class="w-64 md:w-80 mx-auto mb-4">
+                    <p class="text-gray-800 text-lg md:text-xl font-bold">Anılarınızı Ölümsüzleştirin</p>
+                </div>
+            </div>
+
+            <!-- Hero Text -->
+            <div class="mb-12">
+                <h2 class="text-3xl md:text-5xl font-bold text-orange-600 mb-4 leading-tight">
+                    Sevdiklerinizle Paylaştığınız<br>
+                    <span class="text-orange-600 drop-shadow-lg">Unutulmaz Anlar</span>
+                </h2>
+                <p class="text-yellow-500 text-lg md:text-xl max-w-2xl mx-auto drop-shadow-md">
+                    Fotoğraflarınızı özenle tasarlanmış bir anı defterine dönüştürüyoruz.
+                    Her sayfa, bir hikaye. Her hikaye, bir hazine.
+                </p>
+            </div>
+
+
+
+            <!-- Features Grid -->
+            <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 card-hover">
+                    <div class="text-5xl mb-4">💝</div>
+                    <h3 class="text-pink-700 font-bold text-lg mb-2">Kişiselleştirilmiş</h3>
+                    <p class="text-pink-500 text-sm">
+                        Her detay özenle hazırlanır, her sayfa size özeldir
+                    </p>
+                </div>
+
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 card-hover">
+                    <div class="text-5xl mb-4">✨</div>
+                    <h3 class="text-green-700 font-bold text-lg mb-2">Profesyonel Tasarım</h3>
+                    <p class="text-green-500 text-sm">
+                        Uzman tasarımcılarımız her albümü bir sanat eserine dönüştürür
+                    </p>
+                </div>
+
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 card-hover">
+                    <div class="text-5xl mb-4">🌟</div>
+                    <h3 class="text-blue-700 font-bold text-lg mb-2">Kaliteli Baskı</h3>
+                    <p class="text-blue-500 text-sm">
+                        Premium malzemelerle yıllar boyu bozulmadan saklanır
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="py-20 px-4 bg-white">
+        <div class="max-w-5xl mx-auto">
+
+            <h2 class="text-4xl font-bold text-center text-slate-800 mb-12">
+                Nasıl Çalışır?
+            </h2>
+
+            <div class="grid md:grid-cols-3 gap-8">
+
+                <div class="text-center">
+                    <div
+                        class="bg-gradient-to-br from-purple-500 to-pink-500 w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg">
+                        1
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Özel Link Alın</h3>
+                    <p class="text-slate-600">
+                        Sadece sizin için özel olarak oluşturulmuş bir sipariş linki oluşturulur
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <div
+                        class="bg-gradient-to-br from-blue-500 to-cyan-500 w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg">
+                        2
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Fotoğrafları Yükleyin</h3>
+                    <p class="text-slate-600">
+                        En sevdiğiniz anıları ve metinleri kolayca sisteme ekleyin
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <div
+                        class="bg-gradient-to-br from-orange-500 to-red-500 w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg">
+                        3
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Anı Defterinizi Alın</h3>
+                    <p class="text-slate-600">
+                        Profesyonel tasarım ve baskı sonrası elinizde olsun
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-12 px-4">
+        <div class="max-w-5xl mx-auto text-center">
+            <p class="text-slate-400 mb-4">
+                © 2026 EkoPortalHane - Tüm hakları saklıdır
+            </p>
+            <p class="text-slate-500 text-sm">
+                Anılarınız bizim için değerli ❤️
+            </p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

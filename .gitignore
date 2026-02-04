@@ -1,0 +1,55 @@
+# Environment files
+.env
+src/.env
+ani_defteri/
+pdfler/
+scripts/
+
+# OAuth tokens
+tokens.json
+
+# Temporary uploads
+src/temp_uploads/
+
+# Token storage
+src/tokens.json
+src/customer-tokens.json
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# Local configuration
+config.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Output directories
+outputs/
+*.psd
+preview_pdf/
+print_ready/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/

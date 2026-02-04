@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Token Yönetimi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm mb-6">
+        <div class="max-w-5xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-black text-slate-800">📲 Token Oluşturucu</h1>
+                <div class="flex gap-3">
+                    <a href="/admin/orders"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition whitespace-nowrap">
+                        📦 Sipariş Yönetimi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <h2 class="text-4xl md:text-5xl font-black text-slate-800 mb-2">🔐 Admin Panel</h2>
+            <p class="text-slate-600">Müşterilere özel sipariş linkleri oluşturun</p>
+        </div>
+
+        <!-- Token Generator -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border-2 border-slate-100">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <span>✨</span> Yeni Sipariş Linki Oluştur
+            </h2>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Müşteri Adı ve Soyadı</label>
+                <input type="text" id="customerName"
+                    class="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none transition text-lg"
+                    placeholder="Örn: Berat Ölmez" onkeypress="if(event.key === 'Enter') generateToken()">
+            </div>
+
+            <button onclick="generateToken()"
+                class="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-bold py-4 rounded-xl transition shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                <span>📲</span> WhatsApp Mesajı Oluştur
+            </button>
+        </div>
+
+        <!-- Result -->
+        <div id="result"
+            class="hidden bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-6 md:p-8 mb-8 shadow-lg animate-fade-in">
+            <h3 class="text-2xl font-bold text-green-800 mb-6 flex items-center gap-2">
+                <span>✅</span> Link Başarıyla Oluşturuldu!
+            </h3>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-green-800 mb-2">Sipariş Linki:</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="generatedLink" readonly
+                        class="flex-1 p-4 bg-white border-2 border-green-300 rounded-xl font-mono text-sm select-all focus:ring-2 focus:ring-green-500">
+                    <button onclick="copyLink()"
+                        class="px-6 py-4 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition shadow-md whitespace-nowrap">
+                        📋 Linki Kopyala
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-green-800 mb-2">WhatsApp Mesajı (Müşteriye
+                    Gönderilecek):</label>
+                <textarea id="whatsappMessage" readonly rows="14"
+                    class="w-full p-4 bg-white border-2 border-green-300 rounded-xl text-sm resize-none select-all focus:ring-2 focus:ring-green-500 leading-relaxed"></textarea>
+                <button onclick="copyMessage()"
+                    class="mt-3 w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-700 transition shadow-md flex items-center justify-center gap-2">
+                    <span>📋</span> Mesajı Kopyala ve WhatsApp'ta Gönder
+                </button>
+            </div>
+
+            <div class="bg-white border-2 border-green-200 rounded-xl p-4">
+                <p class="text-sm text-green-800 font-medium">
+                    💡 <strong>Sonraki Adım:</strong> Mesajı kopyalayıp WhatsApp'ta müşterinize gönderin.
+                    Müşteri linke tıkladığında formu önceden doldurulmuş olarak görecek.
+                </p>
+            </div>
+        </div>
+
+        <!-- Token List -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-2 border-slate-100">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <span>📋</span> Oluşturulan Linkler
+                </h2>
+                <button onclick="loadTokens()"
+                    class="px-6 py-3 bg-slate-600 text-white rounded-xl font-bold hover:bg-slate-700 transition shadow-md flex items-center justify-center gap-2">
+                    <span>🔄</span> Yenile
+                </button>
+            </div>
+
+            <div id="tokenList" class="space-y-3">
+                <div class="text-center text-slate-400 py-8">
+                    <div class="text-4xl mb-2">⏳</div>
+                    <p>Linkler yükleniyor...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function generateToken() {
+            const customerName = document.getElementById('customerName').value.trim();
+            if (!customerName) {
+                alert('⚠️ Lütfen müşteri adı girin!');
+                document.getElementById('customerName').focus();
+                return;
+            }
+
+            try {
+                const res = await fetch('/admin/generate-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ customerName })
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    document.getElementById('generatedLink').value = result.link;
+                    document.getElementById('whatsappMessage').value = result.whatsappMessage;
+                    document.getElementById('result').classList.remove('hidden');
+                    document.getElementById('customerName').value = '';
+
+                    // Scroll to result
+                    document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                    loadTokens();
+                } else {
+                    alert('❌ Hata: ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Hata: ' + error.message);
+            }
+        }
+
+        function copyLink() {
+            const link = document.getElementById('generatedLink');
+            link.select();
+            navigator.clipboard.writeText(link.value).then(() => {
+                alert('✅ Link kopyalandı!\n\nŞimdi bu linki müşterinize gönderebilirsiniz.');
+            });
+        }
+
+        function copyMessage() {
+            const message = document.getElementById('whatsappMessage');
+            message.select();
+            navigator.clipboard.writeText(message.value).then(() => {
+                alert('✅ Mesaj kopyalandı!\n\nWhatsApp\'ı açın ve müşterinize gönderin.');
+                // Try to open WhatsApp (works on mobile)
+                if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                    window.location.href = 'whatsapp://';
+                }
+            });
+        }
+
+        async function loadTokens() {
+            try {
+                const res = await fetch('/admin/tokens');
+                const result = await res.json();
+
+                if (result.success) {
+                    const list = document.getElementById('tokenList');
+
+                    if (result.tokens.length === 0) {
+                        list.innerHTML = `
+                            <div class="text-center text-slate-400 py-8">
+                                <div class="text-4xl mb-2">📭</div>
+                                <p>Henüz link oluşturulmamış.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    list.innerHTML = result.tokens
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                        .map(t => {
+                            const createdDate = new Date(t.createdAt).toLocaleString('tr-TR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+
+                            const isExpired = new Date() > new Date(t.expiresAt);
+                            const statusColor = t.used ? 'slate' : isExpired ? 'red' : 'green';
+                            const statusText = t.used ? '✓ Kullanıldı' : isExpired ? '⏰ Süresi Doldu' : '⏳ Bekliyor';
+
+                            const isDeleted = t.deleted === true;
+                            const cardBg = isDeleted ? 'bg-gray-100 border-gray-300 opacity-75' :
+                                t.used ? 'bg-slate-50 border-slate-200' :
+                                    isExpired ? 'bg-red-50 border-red-200' :
+                                        'bg-blue-50 border-blue-300';
+                            const finalStatusText = isDeleted ? '🗑️ Silindi' : statusText;
+                            const finalStatusColor = isDeleted ? 'bg-gray-300 text-gray-700' :
+                                t.used ? 'bg-slate-200 text-slate-700' :
+                                    isExpired ? 'bg-red-200 text-red-800' :
+                                        'bg-green-200 text-green-800';
+
+                            return `
+                                <div class="p-5 border-2 rounded-xl ${cardBg} hover:shadow-md transition">
+                                    <div class="flex flex-col gap-3">
+                                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                            <div class="flex-1">
+                                                <p class="font-bold text-lg text-slate-800 mb-1">${t.customerName}</p>
+                                                <p class="text-xs text-slate-500 font-mono bg-slate-100 inline-block px-2 py-1 rounded">${t.token.substring(0, 20)}...</p>
+                                                <p class="text-xs text-slate-600 mt-2">📅 Oluşturma: ${createdDate}</p>
+                                                ${t.used ? `<p class="text-xs text-slate-600 mt-1">📦 Sipariş: <strong>${t.orderId}</strong></p>` : ''}
+                                                ${t.used ? `<p class="text-xs text-slate-600 mt-1">✅ Kullanıldı: ${new Date(t.usedAt).toLocaleString('tr-TR')}</p>` : ''}
+                                                ${isDeleted ? `<p class="text-xs text-slate-600 mt-1">🗑️ Silindi: ${new Date(t.deletedAt).toLocaleString('tr-TR')}</p>` : ''}
+                                            </div>
+                                            <span class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap ${finalStatusColor}">
+                                                ${finalStatusText}
+                                            </span>
+                                        </div>
+                                        ${t.link && !isDeleted ? `
+                                        <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
+                                            <button onclick="viewLink('${t.link}')" 
+                                                class="px-3 py-2 bg-blue-600 text-white text-xs rounded-lg font-bold hover:bg-blue-700 transition flex items-center gap-1">
+                                                🔗 Link Görüntüle
+                                            </button>
+                                            <button onclick="viewWhatsAppMessage('${t.token}')" 
+                                                class="px-3 py-2 bg-green-600 text-white text-xs rounded-lg font-bold hover:bg-green-700 transition flex items-center gap-1">
+                                                💬 Mesaj Görüntüle
+                                            </button>
+                                            ${!t.used && !isExpired ? `
+                                            <button onclick="deleteToken('${t.token}', '${t.customerName}')" 
+                                                class="px-3 py-2 bg-red-600 text-white text-xs rounded-lg font-bold hover:bg-red-700 transition flex items-center gap-1">
+                                                🗑️ Sil
+                                            </button>
+                                            ` : ''}
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                }
+            } catch (error) {
+                console.error('Token listesi yüklenemedi:', error);
+                document.getElementById('tokenList').innerHTML = `
+                    <div class="text-center text-red-500 py-8">
+                        <div class="text-4xl mb-2">❌</div>
+                        <p>Linkler yüklenirken hata oluştu.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // View link in a modal/alert
+        function viewLink(link) {
+            const message = `🔗 Sipariş Linki:\n\n${link}`;
+            if (confirm(message + '\n\nLinki kopyalamak ister misiniz?')) {
+                navigator.clipboard.writeText(link).then(() => {
+                    alert('✅ Link kopyalandı!');
+                });
+            }
+        }
+
+        // View WhatsApp message
+        async function viewWhatsAppMessage(token) {
+            try {
+                const res = await fetch('/admin/tokens');
+                const result = await res.json();
+
+                if (result.success) {
+                    const tokenObj = result.tokens.find(t => t.token === token);
+                    if (tokenObj && tokenObj.whatsappMessage) {
+                        if (confirm(`💬 WhatsApp Mesajı:\n\n${tokenObj.whatsappMessage}\n\nMesajı kopyalamak ister misiniz?`)) {
+                            navigator.clipboard.writeText(tokenObj.whatsappMessage).then(() => {
+                                alert('✅ Mesaj kopyalandı!');
+                            });
+                        }
+                    } else {
+                        alert('Mesaj bulunamadı.');
+                    }
+                }
+            } catch (error) {
+                alert('Mesaj yüklenirken hata oluştu.');
+            }
+        }
+
+        // Delete token
+        async function deleteToken(token, customerName) {
+            if (!confirm(`⚠️ DİKKAT!\n\n"${customerName}" için oluşturulan linki silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz ve müşteri linki kullanamayacak!`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/admin/tokens/${token}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    alert('✅ Token başarıyla silindi!');
+                    loadTokens();
+                } else {
+                    alert('❌ Hata: ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Token silinirken hata oluştu: ' + error.message);
+            }
+        }
+
+        // Load tokens on page load
+        loadTokens();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadTokens, 30000);
+    </script>
+</body>
+
+</html>
