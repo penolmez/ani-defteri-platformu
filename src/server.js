@@ -292,9 +292,9 @@ function generateWhatsAppMessage(customerName, link) {
     return `Merhaba ${customerName},\n\n` +
         `📖 Anı Defteri siparişinizi oluşturmak için aşağıdaki linke tıklayın:\n\n` +
         `${link}\n\n` +
-        `ℹ️ Bu link size özeldir. Formu dilediğiniz gibi doldurabilirsiniz.\n` +
-        `⏰ Link 7 gün boyunca aktiftir.\n\n` +
-        `📸 Lütfen en güzel fotoğraflarınızı ve anılarınızı bizimle paylaşın.\n\n` +
+        `ℹ️ Bu link size özeldir ve 7 gün boyunca aktiftir.\n\n` +
+        `📸 En güzel fotoğraflarınızı ve anılarınızı buradan kolayca yükleyebilirsiniz.\n` +
+        `📱 Herhangi bir noktada zorlanırsanız, WhatsApp üzerinden bize yazmanız yeterli. Size yardımcı oluruz.\n\n` +
         `🔒 KVKK Notu: Yüklediğiniz tüm veriler güvenli olarak saklanır ve sadece sipariş işleme amacıyla kullanılır.\n\n` +
         `Teşekkürler! ❤️`;
 }
