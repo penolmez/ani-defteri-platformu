@@ -27,7 +27,7 @@ function generateToken() {
  * @param {number} expiresInDays - Number of days until token expires (default: 7)
  * @returns {string} Generated token
  */
-function createToken(customerName, expiresInDays = 7) {
+function createToken(customerName, expiresInDays = 7, link = null, whatsappMessage = null) {
     initTokensFile();
 
     const tokensData = JSON.parse(fs.readFileSync(TOKENS_FILE, 'utf-8'));
@@ -40,7 +40,11 @@ function createToken(customerName, expiresInDays = 7) {
         expiresAt: new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString(),
         used: false,
         usedAt: null,
-        orderId: null
+        orderId: null,
+        link: link,
+        whatsappMessage: whatsappMessage,
+        deleted: false,
+        deletedAt: null
     };
 
     tokensData.tokens.push(newToken);
@@ -62,6 +66,10 @@ function validateToken(token) {
 
     if (!tokenObj) {
         return { valid: false, reason: 'not_found' };
+    }
+
+    if (tokenObj.deleted) {
+        return { valid: false, reason: 'deleted', tokenData: tokenObj };
     }
 
     if (tokenObj.used) {
@@ -108,9 +116,77 @@ function getAllTokens() {
     return tokensData.tokens;
 }
 
+/**
+ * Delete (invalidate) a token
+ * @param {string} token - Token to delete
+ * @returns {boolean} Success status
+ */
+function deleteToken(token) {
+    initTokensFile();
+
+    const tokensData = JSON.parse(fs.readFileSync(TOKENS_FILE, 'utf-8'));
+    const tokenObj = tokensData.tokens.find(t => t.token === token);
+
+    if (tokenObj) {
+        tokenObj.deleted = true;
+        tokenObj.deletedAt = new Date().toISOString();
+        fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokensData, null, 2));
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Update token with link and WhatsApp message after generation
+ * @param {string} token - Token to update
+ * @param {string} link - Generated link
+ * @param {string} whatsappMessage - Generated WhatsApp message
+ * @returns {boolean} Success status
+ */
+function updateTokenMetadata(token, link, whatsappMessage) {
+    initTokensFile();
+
+    const tokensData = JSON.parse(fs.readFileSync(TOKENS_FILE, 'utf-8'));
+    const tokenObj = tokensData.tokens.find(t => t.token === token);
+
+    if (tokenObj) {
+        tokenObj.link = link;
+        tokenObj.whatsappMessage = whatsappMessage;
+        fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokensData, null, 2));
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Update token's orderId after successful order creation
+ * @param {string} token - Token to update
+ * @param {string} orderId - Order ID to set
+ * @returns {boolean} Success status
+ */
+function updateTokenOrderId(token, orderId) {
+    initTokensFile();
+
+    const tokensData = JSON.parse(fs.readFileSync(TOKENS_FILE, 'utf-8'));
+    const tokenObj = tokensData.tokens.find(t => t.token === token);
+
+    if (tokenObj && tokenObj.used) {
+        tokenObj.orderId = orderId;
+        fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokensData, null, 2));
+        return true;
+    }
+
+    return false;
+}
+
 module.exports = {
     createToken,
     validateToken,
     markTokenUsed,
-    getAllTokens
+    updateTokenOrderId,
+    getAllTokens,
+    deleteToken,
+    updateTokenMetadata
 };

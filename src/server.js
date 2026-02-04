@@ -78,11 +78,39 @@ if (tokens) {
     oauth2Client.setCredentials(tokens);
 }
 
+// Auto-refresh token handler - saves new tokens when refreshed
+oauth2Client.on('tokens', (newTokens) => {
+    console.log('🔄 Token refreshed automatically');
+
+    // Merge new tokens with existing ones
+    if (tokens) {
+        Object.assign(tokens, newTokens);
+    } else {
+        tokens = newTokens;
+    }
+
+    // Save to file if not using env var
+    if (!config.googleTokens) {
+        try {
+            fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens, null, 2));
+            console.log('💾 New tokens saved to tokens.json');
+        } catch (err) {
+            console.error('❌ Failed to save refreshed tokens:', err);
+        }
+    } else {
+        console.log('⚠️ Using env var tokens - refresh token cannot be auto-saved. Please update GOOGLE_TOKENS manually if errors persist.');
+    }
+});
+
 const drive = google.drive({ version: 'v3', auth: oauth2Client });
 
 // --- AUTH ROUTES ---
 app.get('/auth', (req, res) => {
-    const authUrl = oauth2Client.generateAuthUrl({ access_type: 'offline', scope: SCOPES });
+    const authUrl = oauth2Client.generateAuthUrl({
+        access_type: 'offline',
+        prompt: 'consent',   // 🔥 Force consent screen to always get refresh token
+        scope: SCOPES
+    });
     res.redirect(authUrl);
 });
 
@@ -91,8 +119,16 @@ app.get('/oauth2callback', async (req, res) => {
     if (code) {
         try {
             const { tokens } = await oauth2Client.getToken(code);
+            console.log('🔐 OAuth Tokens received:', tokens);
+
+            if (!tokens.refresh_token) {
+                console.warn('⚠️ Refresh token gelmedi! prompt=consent ekli mi?');
+            } else {
+                console.log('✅ Refresh token alındı!');
+            }
+
             oauth2Client.setCredentials(tokens);
-            fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
+            fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens, null, 2));
             res.send('Giriş başarılı! Sunucuyu kapatıp normal kullanıma devam edebilirsiniz.');
         } catch (error) {
             console.error('Token alma hatası:', error);
@@ -206,6 +242,9 @@ app.post('/admin/generate-token', requireAuth, express.json(), (req, res) => {
         // Generate WhatsApp message
         const whatsappMessage = generateWhatsAppMessage(customerName.trim(), orderLink);
 
+        // Update token with link and message for future reference
+        tokenManager.updateTokenMetadata(token, orderLink, whatsappMessage);
+
         res.json({
             success: true,
             token: token,
@@ -221,13 +260,40 @@ app.post('/admin/generate-token', requireAuth, express.json(), (req, res) => {
     }
 });
 
+// Delete/invalidate a token
+app.delete('/admin/tokens/:token', requireAuth, (req, res) => {
+    const { token } = req.params;
+
+    try {
+        const success = tokenManager.deleteToken(token);
+
+        if (success) {
+            res.json({
+                success: true,
+                message: 'Token başarıyla silindi ve geçersiz kılındı.'
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                error: 'Token bulunamadı.'
+            });
+        }
+    } catch (error) {
+        console.error('Token deletion error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Token silinirken hata oluştu.'
+        });
+    }
+});
+
 // Generate WhatsApp-ready message
 function generateWhatsAppMessage(customerName, link) {
     return `Merhaba ${customerName},\n\n` +
         `📖 Anı Defteri siparişinizi oluşturmak için aşağıdaki linke tıklayın:\n\n` +
         `${link}\n\n` +
-        `ℹ️ Bu link sadece sizin için oluşturulmuştur ve tek kullanımlıktır.\n` +
-        `⏰ Link 7 gün geçerlidir.\n\n` +
+        `ℹ️ Bu link size özeldir. Formu dilediğiniz gibi doldurabilirsiniz.\n` +
+        `⏰ Link 7 gün boyunca aktiftir.\n\n` +
         `📸 Lütfen en güzel fotoğraflarınızı ve anılarınızı bizimle paylaşın.\n\n` +
         `🔒 KVKK Notu: Yüklediğiniz tüm veriler güvenli olarak saklanır ve sadece sipariş işleme amacıyla kullanılır.\n\n` +
         `Teşekkürler! ❤️`;
@@ -251,6 +317,9 @@ app.get('/o/:token', (req, res) => {
         } else if (validation.reason === 'expired') {
             errorMessage = 'Bu linkin süresi dolmuş.';
             errorDetails = 'Lütfen yeni link isteyin.';
+        } else if (validation.reason === 'deleted') {
+            errorMessage = 'Bu link iptal edilmiş.';
+            errorDetails = 'Bu link yönetici tarafından geçersiz kılınmıştır. Lütfen yeni link isteyin.';
         } else {
             errorMessage = 'Bu link geçersiz.';
             errorDetails = 'Link bulunamadı veya bozuk.';
@@ -492,6 +561,90 @@ app.get('/api/admin/orders', requireAuth, async (req, res) => {
     }
 });
 
+// Bulk update order statuses
+app.post('/api/admin/orders/bulk-update', requireAuth, express.json(), async (req, res) => {
+    const { orderIds, status, note } = req.body;
+
+    const validStatuses = ['submitted', 'psd_done', 'preview_sent', 'approved', 'print_done'];
+
+    if (!Array.isArray(orderIds) || orderIds.length === 0) {
+        return res.status(400).json({
+            success: false,
+            error: 'En az bir sipariş seçilmeli.'
+        });
+    }
+
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+            success: false,
+            error: 'Invalid status. Must be one of: ' + validStatuses.join(', ')
+        });
+    }
+
+    try {
+        const results = {
+            updated: [],
+            failed: []
+        };
+
+        for (const orderId of orderIds) {
+            try {
+                // Find order folder and order.json
+                const orderFolder = await findOrderFolder(orderId);
+                if (!orderFolder) {
+                    results.failed.push({ orderId, error: 'Order not found' });
+                    continue;
+                }
+
+                const orderJsonFile = await findFileInFolder('order.json', orderFolder.id);
+                if (!orderJsonFile) {
+                    results.failed.push({ orderId, error: 'order.json not found' });
+                    continue;
+                }
+
+                // Download current order.json
+                const orderData = await downloadAndParseJson(orderJsonFile.id);
+                const oldStatus = orderData.status || 'submitted';
+
+                // Update status
+                orderData.status = status;
+                orderData.lastUpdated = new Date().toISOString();
+
+                // Upload updated order.json
+                await drive.files.update({
+                    fileId: orderJsonFile.id,
+                    media: {
+                        mimeType: 'application/json',
+                        body: JSON.stringify(orderData, null, 2)
+                    }
+                });
+
+                // Log status change
+                await logStatusChange(orderFolder.id, orderId, oldStatus, status, note);
+
+                results.updated.push({ orderId, oldStatus, newStatus: status });
+                console.log(`✅ Bulk update: ${orderId} (${oldStatus} → ${status})`);
+            } catch (error) {
+                results.failed.push({ orderId, error: error.message });
+                console.error(`Error updating ${orderId}:`, error);
+            }
+        }
+
+        res.json({
+            success: true,
+            updated: results.updated.length,
+            failed: results.failed.length,
+            results: results
+        });
+    } catch (error) {
+        console.error('Bulk update error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update orders: ' + error.message
+        });
+    }
+});
+
 // Update order status
 app.post('/api/admin/orders/:orderId/status', requireAuth, async (req, res) => {
     const { orderId } = req.params;
@@ -626,6 +779,13 @@ async function createTextFile(name, content, parentId) {
 
 // --- API ---
 
+// Helper function to check refresh token before order operations
+function validateRefreshToken() {
+    if (!oauth2Client.credentials?.refresh_token) {
+        throw new Error('Google Drive bağlantısı düşmüş. Lütfen yönetici panelinden /auth ile tekrar giriş yapın.');
+    }
+}
+
 // Rate limiter for order creation endpoint
 const orderLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,  // 15 minutes
@@ -644,6 +804,9 @@ app.post('/api/olustur', orderLimiter, upload.any(), async (req, res) => {
     if (req.files) req.files.forEach(f => cleanupFiles.push(f.path));
 
     try {
+        // 🔒 CRITICAL: Check refresh token exists
+        validateRefreshToken();
+
         if (!oauth2Client.credentials || !oauth2Client.credentials.access_token) {
             throw new Error("Google Drive yetkisi yok. Lütfen /auth endpointine giderek giriş yapın.");
         }
@@ -658,6 +821,25 @@ app.post('/api/olustur', orderLimiter, upload.any(), async (req, res) => {
         // Generate unique order ID and metadata
         const orderId = orderUtils.generateOrderId();
         const customerSlug = orderUtils.createCustomerSlug(customerName);
+
+        // 🔒 CRITICAL SECURITY: Lock token IMMEDIATELY if present (before any processing)
+        // This prevents race condition where same token could be used multiple times
+        const submittedToken = textData['_token'];
+        if (submittedToken) {
+            const validation = tokenManager.validateToken(submittedToken);
+            if (!validation.valid) {
+                throw new Error(`Token geçersiz: ${validation.reason}`);
+            }
+
+            // Lock token IMMEDIATELY with temporary orderId to prevent concurrent usage
+            const locked = tokenManager.markTokenUsed(submittedToken, orderId);
+            if (!locked) {
+                throw new Error('Token işaretlenemedi. Lütfen tekrar deneyin.');
+            }
+            console.log(`🔒 Token locked immediately: ${submittedToken.substring(0, 16)}... for order ${orderId}`);
+        }
+
+        // Rest of the order creation process...
         const orderFolderName = orderUtils.createOrderFolderName(orderId, customerSlug);
         const yearMonthPath = orderUtils.getYearMonthPath(new Date());
         const createdAt = new Date().toISOString();
@@ -745,14 +927,8 @@ app.post('/api/olustur', orderLimiter, upload.any(), async (req, res) => {
         await createTextFile('bilgiler.txt', txtContent, mainFolderId);
         console.log('📄 bilgiler.txt oluşturuldu');
 
-        // Mark token as used if order was submitted via token link
-        const submittedToken = textData['_token'];
-        if (submittedToken) {
-            const marked = tokenManager.markTokenUsed(submittedToken, orderId);
-            if (marked) {
-                console.log(`🔒 Token marked as used: ${submittedToken.substring(0, 16)}...`);
-            }
-        }
+        // Token already marked as used earlier (immediately after validation)
+        // No need to mark again here
 
         res.json({
             success: true,

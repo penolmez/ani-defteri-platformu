@@ -37,7 +37,7 @@
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 py-8">
-        <!-- Filters -->
+        <!-- Filters & Bulk Actions -->
         <div class="bg-white rounded-xl shadow-sm p-4 mb-6 flex gap-4 items-center flex-wrap">
             <label class="font-semibold text-slate-700">Filtrele:</label>
             <select id="statusFilter" onchange="filterOrders()" class="px-4 py-2 border border-slate-200 rounded-lg">
@@ -52,12 +52,38 @@
                 class="flex-1 min-w-[200px] px-4 py-2 border border-slate-200 rounded-lg">
         </div>
 
+        <!-- Bulk Actions Toolbar (shows when items selected) -->
+        <div id="bulkActionsBar"
+            class="hidden bg-orange-50 border-2 border-orange-300 rounded-xl shadow-md p-4 mb-6 flex gap-4 items-center flex-wrap">
+            <span class="font-bold text-orange-800" id="selectedCount">0 sipariş seçildi</span>
+            <select id="bulkStatus" class="px-4 py-2 border-2 border-orange-200 rounded-lg bg-white">
+                <option value="">Durum Seç...</option>
+                <option value="submitted">📤 Gönderildi</option>
+                <option value="psd_done">🎨 PSD Hazır</option>
+                <option value="preview_sent">👁️ Önizleme Gönderildi</option>
+                <option value="approved">✅ Onaylandı</option>
+                <option value="print_done">🖨️ Basım Bitti</option>
+            </select>
+            <button onclick="applyBulkUpdate()"
+                class="px-6 py-2 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition shadow-md">
+                ✨ Seçililere Uygula
+            </button>
+            <button onclick="clearSelection()"
+                class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-300 transition">
+                ✖ Seçimi Temizle
+            </button>
+        </div>
+
         <!-- Orders Table -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-slate-100 border-b border-slate-200">
                         <tr>
+                            <th class="px-4 py-3 text-center w-12">
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()"
+                                    class="w-4 h-4 cursor-pointer">
+                            </th>
                             <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase">Sipariş ID</th>
                             <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase">Müşteri</th>
                             <th class="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase">Tarih</th>
@@ -115,6 +141,7 @@
     <script>
         let allOrders = [];
         let currentOrderId = null;
+        let selectedOrders = new Set();
 
         async function loadOrders() {
             try {
@@ -157,20 +184,28 @@
                 return;
             }
 
-            table.innerHTML = orders.map(order => `
-                <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+            table.innerHTML = orders.map(order => {
+                const isSelected = selectedOrders.has(order.orderId);
+                return `
+                <tr class="border-b border-slate-100 hover:bg-slate-50 transition ${isSelected ? 'bg-blue-50' : ''}">
+                    <td class="px-4 py-3 text-center">
+                        <input type="checkbox" class="order-checkbox w-4 h-4 cursor-pointer" 
+                            data-order-id="${order.orderId}" 
+                            ${isSelected ? 'checked' : ''}
+                            onchange="toggleOrderSelection('${order.orderId}')">
+                    </td>
                     <td class="px-4 py-3">
                         <code class="text-xs font-mono text-slate-700 bg-slate-100 px-2 py-1 rounded">${order.orderId}</code>
                     </td>
                     <td class="px-4 py-3 font-semibold text-slate-800">${order.customerName}</td>
                     <td class="px-4 py-3 text-sm text-slate-600">
                         ${new Date(order.createdAt).toLocaleDateString('tr-TR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            })}
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })}
                     </td>
                     <td class="px-4 py-3">
                         ${getStatusBadge(order.status)}
@@ -191,7 +226,8 @@
                         </div>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function getStatusBadge(status) {
@@ -299,6 +335,99 @@
                 closeStatusModal();
             }
         });
+
+        // Toggle order selection
+        function toggleOrderSelection(orderId) {
+            if (selectedOrders.has(orderId)) {
+                selectedOrders.delete(orderId);
+            } else {
+                selectedOrders.add(orderId);
+            }
+            updateBulkActionsBar();
+            renderOrders(allOrders); // Re-render to update checkbox states and row colors
+        }
+
+        // Toggle select all
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox.checked) {
+                // Select all visible orders
+                const visibleOrders = Array.from(document.querySelectorAll('.order-checkbox'));
+                visibleOrders.forEach(cb => {
+                    const orderId = cb.getAttribute('data-order-id');
+                    selectedOrders.add(orderId);
+                });
+            } else {
+                // Clear all selections
+                selectedOrders.clear();
+            }
+            updateBulkActionsBar();
+            renderOrders(allOrders);
+        }
+
+        // Clear selection
+        function clearSelection() {
+            selectedOrders.clear();
+            document.getElementById('selectAll').checked = false;
+            updateBulkActionsBar();
+            renderOrders(allOrders);
+        }
+
+        // Update bulk actions bar visibility and count
+        function updateBulkActionsBar() {
+            const bar = document.getElementById('bulkActionsBar');
+            const count = document.getElementById('selectedCount');
+
+            if (selectedOrders.size > 0) {
+                bar.classList.remove('hidden');
+                count.textContent = `${selectedOrders.size} sipariş seçildi`;
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        // Apply bulk status update
+        async function applyBulkUpdate() {
+            const newStatus = document.getElementById('bulkStatus').value;
+
+            if (!newStatus) {
+                alert('⚠️ Lütfen bir durum seçin!');
+                return;
+            }
+
+            const note = prompt(`${selectedOrders.size} sipariş için toplu güncelleme yapılacak.\n\nİsteğe bağlı not girin (veya boş bırakın):`);
+
+            if (note === null) return; // User canceled
+
+            if (!confirm(`⚠️ ${selectedOrders.size} siparişin durumunu güncellemek istediğinize emin misiniz?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/orders/bulk-update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderIds: Array.from(selectedOrders),
+                        status: newStatus,
+                        note: note || undefined
+                    })
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    alert(`✅ Toplu güncelleme tamamlandı!\n\nGüncellenen: ${result.updated}\nBaşarısız: ${result.failed}`);
+                    clearSelection();
+                    loadOrders();
+                } else {
+                    alert('❌ Hata: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Bulk update error:', error);
+                alert('❌ Toplu güncelleme sırasında hata oluştu: ' + error.message);
+            }
+        }
 
         // Load orders on page load
         loadOrders();

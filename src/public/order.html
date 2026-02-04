@@ -445,9 +445,12 @@
 
                 <section
                     class="section-card bg-orange-50/50 border-orange-100 flex-col md:flex-col items-center text-center p-8">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-2">12. Diğer Fotoğraflarınız Buraya</h2>
-                    <p class="text-slate-500 mb-6 max-w-lg">Kitabın geri kalanı için en güzel anılarınızdan 15-60 adet
-                        fotoğraf seçin. Gerisini biz tasarlayalım.</p>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">12. Diğer Fotoğraflarınız Buraya <span
+                            class="text-red-600">*</span></h2>
+                    <p class="text-slate-500 mb-2 max-w-lg">Kitabın geri kalanı için en güzel anılarınızdan <strong
+                            class="text-orange-600">15-60 adet</strong> fotoğraf seçin.</p>
+                    <p class="text-sm text-red-600 font-bold mb-6">⚠️ ZORUNLU: Minimum 15, maksimum 60 fotoğraf
+                        yüklemelisiniz</p>
 
                     <div class="relative bg-white w-full max-w-md aspect-video rounded-xl border-2 border-dashed border-orange-300 shadow-sm flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 hover:border-orange-500 transition group"
                         id="bulkDropZone">
@@ -458,6 +461,7 @@
                             class="px-6 py-2 bg-orange-600 text-white font-bold rounded-full text-sm shadow-md group-hover:bg-orange-700 transition">Toplu
                             Fotoğraf Seç</span>
                         <p id="bulkCount" class="mt-4 font-bold text-slate-800 text-lg hidden">0 Dosya Seçildi</p>
+                        <p id="bulkStatus" class="mt-2 text-sm text-slate-500 hidden"></p>
                     </div>
                 </section>
 
@@ -738,37 +742,71 @@
                 reader.readAsDataURL(file);
             }
 
-            // Toplu Yükleme (Bulk)
+            // Toplu Yükleme (Bulk) - Enhanced validation and feedback
             const bulkInput = document.getElementById('bulkInput');
             if (bulkInput) {
                 bulkInput.addEventListener('change', () => {
                     const files = Array.from(bulkInput.files);
+                    const countLabel = document.getElementById('bulkCount');
+                    const statusLabel = document.getElementById('bulkStatus');
 
-                    // Minimum dosya sayısı kontrolü
-                    if (files.length > 0 && files.length < MIN_BULK_FILES) {
-                        alert(`⚠️ En az ${MIN_BULK_FILES} fotoğraf yüklemelisiniz!\n\nSeçtiğiniz dosya sayısı: ${files.length}\n\nLütfen daha fazla fotoğraf seçin.`);
+                    // Clear any previous selections if validation fails
+                    let validationPassed = true;
+
+                    // Check if user selected files
+                    if (files.length === 0) {
+                        countLabel.classList.add('hidden');
+                        statusLabel.classList.add('hidden');
+                        return;
+                    }
+
+                    // Minimum dosya sayısı kontrolü  
+                    if (files.length < MIN_BULK_FILES) {
+                        alert(`⚠️ YETERSİZ FOTOĞRAF!\n\n✗ Seçtiğiniz: ${files.length} fotoğraf\n✓ Minimum gerekli: ${MIN_BULK_FILES} fotoğraf\n\nLütfen en az ${MIN_BULK_FILES} fotoğraf seçin.`);
                         bulkInput.value = "";
+                        countLabel.classList.add('hidden');
+                        statusLabel.classList.add('hidden');
+                        validationPassed = false;
                         return;
                     }
 
                     // Maksimum dosya sayısı kontrolü
                     if (files.length > MAX_BULK_FILES) {
-                        alert(`⚠️ En fazla ${MAX_BULK_FILES} fotoğraf yükleyebilirsiniz!\n\nSeçtiğiniz dosya sayısı: ${files.length}\n\nLütfen daha az fotoğraf seçin.`);
+                        alert(`⚠️ ÇOK FAZLA FOTOĞRAF!\n\n✗ Seçtiğiniz: ${files.length} fotoğraf\n✓ Maksimum izin verilen: ${MAX_BULK_FILES} fotoğraf\n\nLütfen ${MAX_BULK_FILES} veya daha az fotoğraf seçin.`);
                         bulkInput.value = "";
+                        countLabel.classList.add('hidden');
+                        statusLabel.classList.add('hidden');
+                        validationPassed = false;
                         return;
                     }
 
                     // Dosya boyutu kontrolü
-                    if (files.some(f => f.size > MAX_FILE_SIZE)) {
-                        alert("Bazı dosyalar 20MB sınırını aşıyor. Lütfen kontrol edin.");
+                    const oversizedFiles = files.filter(f => f.size > MAX_FILE_SIZE);
+                    if (oversizedFiles.length > 0) {
+                        const oversizedList = oversizedFiles.map(f => `• ${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join('\n');
+                        alert(`⚠️ BÜYÜK DOSYA TESPİT EDİLDİ!\n\n${oversizedFiles.length} fotoğraf 20MB sınırını aşıyor:\n\n${oversizedList}\n\nLütfen bu fotoğrafları sıkıştırın veya daha küçüklerini seçin.`);
                         bulkInput.value = "";
+                        countLabel.classList.add('hidden');
+                        statusLabel.classList.add('hidden');
+                        validationPassed = false;
                         return;
                     }
 
-                    const countLabel = document.getElementById('bulkCount');
-                    countLabel.innerText = `${files.length} Dosya Seçildi`;
-                    countLabel.classList.remove('hidden');
-                    updateProgress();
+                    // All validations passed!
+                    if (validationPassed) {
+                        countLabel.innerText = `✅ ${files.length} Fotoğraf Seçildi`;
+                        countLabel.classList.remove('hidden');
+                        countLabel.classList.remove('text-red-600');
+                        countLabel.classList.add('text-green-600');
+
+                        statusLabel.innerText = `📸 ${MIN_BULK_FILES}-${MAX_BULK_FILES} aralığında, mükemmel!`;
+                        statusLabel.classList.remove('hidden');
+                        statusLabel.classList.remove('text-red-500');
+                        statusLabel.classList.add('text-green-600');
+
+                        console.log(`✅ Bulk upload validated: ${files.length} files`);
+                        updateProgress();
+                    }
                 });
             }
 
@@ -811,14 +849,21 @@
                         return;
                     }
 
-                    /*
-                    const coverPhotoInput = document.querySelector('[name="01_Sayfa"]');
-                    if (!coverPhotoInput || !coverPhotoInput.files || coverPhotoInput.files.length === 0) {
-                        alert("⚠️ Kapak fotoğrafı (01_Sayfa) zorunludur!");
-                        document.querySelector('[data-name="01_Sayfa"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // ⚠️ CRITICAL: Validate bulk upload - MANDATORY!
+                    const bulkInput = document.getElementById('bulkInput');
+                    if (!bulkInput || !bulkInput.files || bulkInput.files.length === 0) {
+                        alert(`⚠️ TOPLU FOTOĞRAF YÜKLEME ZORUNLUDUR!\n\nLütfen en az ${MIN_BULK_FILES} fotoğraf yükleyin.\n\nTüm anılarınızı paylaşmanız için bu alan zorunludur.`);
+                        document.getElementById('bulkDropZone')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         return;
                     }
-                    */
+
+                    const fileCount = bulkInput.files.length;
+                    if (fileCount < MIN_BULK_FILES || fileCount > MAX_BULK_FILES) {
+                        alert(`⚠️ TOPLU FOTOĞRAF SAYISI GEÇERSİZ!\n\n✗ Şu an: ${fileCount} fotoğraf seçili\n✓ Minimum: ${MIN_BULK_FILES} fotoğraf\n✓ Maksimum: ${MAX_BULK_FILES} fotoğraf\n\nLütfen ${MIN_BULK_FILES}-${MAX_BULK_FILES} arasında fotoğraf seçin.`);
+                        document.getElementById('bulkDropZone')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        return;
+                    }
+
                     if (!confirm("Siparişinizi oluşturmak üzeresiniz. Her şeyin doğru olduğundan emin misiniz?")) return;
 
                     // Visual Feedback (Overlay)
