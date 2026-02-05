@@ -451,9 +451,9 @@
                     <h2 class="text-2xl font-bold text-slate-800 mb-2">12. Diğer Fotoğraflarınız Buraya <span
                             class="text-red-600">*</span></h2>
                     <p class="text-slate-500 mb-2 max-w-lg">Kitabın geri kalanı için en güzel anılarınızdan <strong
-                            class="text-orange-600">15-60 adet</strong> fotoğraf seçin.</p>
-                    <p class="text-sm text-red-600 font-bold mb-6">⚠️ ZORUNLU: Minimum 15, maksimum 60 fotoğraf
-                        yüklemelisiniz</p>
+                            class="text-orange-600">25-40 adet</strong> fotoğraf seçin.</p>
+                    <p class="text-sm text-red-600 font-bold mb-6">⚠️ ZORUNLU: Minimum 15 fotoğraf yüklemelisiniz.</p>
+                    <p class="text-sm text-red-600 font-bold mb-6">⚡ Bu alana maksimum 50 fotoğraf yükleyebilirsiniz</p>
 
                     <div class="relative bg-white w-full max-w-md aspect-video rounded-xl border-2 border-dashed border-orange-300 shadow-sm flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 hover:border-orange-500 transition group"
                         id="bulkDropZone">
@@ -691,7 +691,7 @@
             // Dosya Yönetimi (Drop Zones) - Epic 2 (Upload Security)
             const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB Sınırı
             const MIN_BULK_FILES = 15; // Minimum toplu yükleme dosya sayısı
-            const MAX_BULK_FILES = 60; // Maksimum toplu yükleme dosya sayısı
+            const MAX_BULK_FILES = 50; // Maksimum toplu yükleme dosya sayısı
 
             document.querySelectorAll('.drop-zone').forEach(zone => {
                 const input = zone.querySelector('input');

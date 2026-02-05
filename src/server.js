@@ -29,7 +29,7 @@ const uploadConfig = multer({
     dest: 'temp_uploads/',
     limits: {
         fileSize: 20 * 1024 * 1024,  // 20MB per file
-        files: 80                    // Maximum 50 files per request
+        files: 80                    // Maximum 80 files per request
     },
     fileFilter: (req, file, cb) => {
         // Only allow image files
