@@ -17,6 +17,8 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = config.port;
 
+app.set('trust proxy', 1);
+
 app.use(cors());
 app.use(express.static('public'));
 
@@ -27,7 +29,7 @@ const uploadConfig = multer({
     dest: 'temp_uploads/',
     limits: {
         fileSize: 20 * 1024 * 1024,  // 20MB per file
-        files: 50                      // Maximum 50 files per request
+        files: 80                    // Maximum 50 files per request
     },
     fileFilter: (req, file, cb) => {
         // Only allow image files
@@ -799,173 +801,159 @@ const orderLimiter = rateLimit({
     legacyHeaders: false,       // Disable `X-RateLimit-*` headers
 });
 
-app.post('/api/olustur', orderLimiter, upload.any(), async (req, res) => {
-    const cleanupFiles = [];
-    if (req.files) req.files.forEach(f => cleanupFiles.push(f.path));
+app.post('/api/olustur', orderLimiter, (req, res) => {
+    // upload'u route içinde çalıştır ki hatayı yakalayabilelim
+    upload.any()(req, res, async (err) => {
+        const cleanupFiles = [];
+        if (req.files) req.files.forEach(f => cleanupFiles.push(f.path));
 
-    try {
-        // 🔒 CRITICAL: Check refresh token exists
-        validateRefreshToken();
+        // ✅ Multer hatalarını burada yakala
+        if (err) {
+            let msg = 'Dosya yükleme hatası oluştu.';
+            if (err.code === 'LIMIT_FILE_COUNT') msg = 'Çok fazla dosya seçtiniz. Maksimum 50 dosya yükleyebilirsiniz.';
+            else if (err.code === 'LIMIT_FILE_SIZE') msg = 'Dosya boyutu çok büyük. Maksimum 20MB yükleyebilirsiniz.';
+            else if (err.message) msg = err.message;
 
-        if (!oauth2Client.credentials || !oauth2Client.credentials.access_token) {
-            throw new Error("Google Drive yetkisi yok. Lütfen /auth endpointine giderek giriş yapın.");
+            return res.status(400).json({ success: false, error: msg, orderId: null });
         }
 
-        const textData = req.body;
-        const customerName = textData['musteri_adi'];
+        try {
+            validateRefreshToken();
 
-        if (!customerName) {
-            throw new Error("Dosya İsmi (Müşteri Adı) alanı boş geldi.");
-        }
-
-        // Generate unique order ID and metadata
-        const orderId = orderUtils.generateOrderId();
-        const customerSlug = orderUtils.createCustomerSlug(customerName);
-
-        // 🔒 CRITICAL SECURITY: Lock token IMMEDIATELY if present (before any processing)
-        // This prevents race condition where same token could be used multiple times
-        const submittedToken = textData['_token'];
-        if (submittedToken) {
-            const validation = tokenManager.validateToken(submittedToken);
-            if (!validation.valid) {
-                throw new Error(`Token geçersiz: ${validation.reason}`);
+            if (!oauth2Client.credentials || !oauth2Client.credentials.access_token) {
+                return res.status(500).json({
+                    success: false,
+                    error: "Google Drive yetkisi yok. Lütfen yönetici ile iletişime geçin.",
+                    orderId: null
+                });
             }
 
-            // Lock token IMMEDIATELY with temporary orderId to prevent concurrent usage
-            const locked = tokenManager.markTokenUsed(submittedToken, orderId);
-            if (!locked) {
-                throw new Error('Token işaretlenemedi. Lütfen tekrar deneyin.');
+            const textData = req.body;
+            const customerName = textData['musteri_adi'];
+
+            if (!customerName) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Dosya İsmi (Müşteri Adı) alanı boş geldi.",
+                    orderId: null
+                });
             }
-            console.log(`🔒 Token locked immediately: ${submittedToken.substring(0, 16)}... for order ${orderId}`);
-        }
 
-        // Rest of the order creation process...
-        const orderFolderName = orderUtils.createOrderFolderName(orderId, customerSlug);
-        const yearMonthPath = orderUtils.getYearMonthPath(new Date());
-        const createdAt = new Date().toISOString();
+            // ✅ Token lock aynen bırakılabilir
+            const orderId = orderUtils.generateOrderId();
+            const customerSlug = orderUtils.createCustomerSlug(customerName);
 
-        console.log(`📦 Yeni Sipariş: ${orderId} - ${customerName}`);
-
-        // 1. Root folder - Ani-Defteri-Siparisler
-        const rootFolderId = config.drive.rootFolderId
-            ? config.drive.rootFolderId
-            : await findOrCreateFolder(config.drive.rootFolderName);
-
-        // 2. Year folder (e.g., "2026")
-        const yearFolder = yearMonthPath.split('/')[0];
-        const yearFolderId = await findOrCreateFolder(yearFolder, rootFolderId);
-
-        // 3. Month folder (e.g., "02")
-        const monthFolder = yearMonthPath.split('/')[1];
-        const monthFolderId = await findOrCreateFolder(monthFolder, yearFolderId);
-
-        // 4. Order folder with unique ID
-        const mainFolderId = await createFolder(orderFolderName, monthFolderId);
-        console.log(`📁 Klasör oluşturuldu: ${yearMonthPath}/${orderFolderName}`);
-
-        // 5. Create subfolder structure
-        const genelFolderId = await createFolder('genel', mainFolderId);
-        const ozelFolderId = await createFolder('ozel', mainFolderId);
-        const outputsFolderId = await createFolder('outputs', mainFolderId);
-        const logsFolderId = await createFolder('logs', mainFolderId);
-
-        // 6. Prepare files metadata for order.json
-        const filesMetadata = {
-            special: {},
-            general: []
-        };
-
-        // 7. Upload files
-        if (req.files && req.files.length > 0) {
-            for (const file of req.files) {
-                // BULK UPLOAD (General folder)
-                if (file.fieldname === '12_Genel_Photos') {
-                    const targetName = `Foto_${Date.now()}_${file.originalname}`;
-                    filesMetadata.general.push(targetName);
-                    await uploadFile(targetName, file.path, file.mimetype, genelFolderId);
+            const submittedToken = textData['_token'];
+            if (submittedToken) {
+                const validation = tokenManager.validateToken(submittedToken);
+                if (!validation.valid) {
+                    return res.status(400).json({
+                        success: false,
+                        error: `Token geçersiz: ${validation.reason}`,
+                        orderId: null
+                    });
                 }
-                // STANDARD PAGES (Special folder)
-                else {
-                    const ext = path.extname(file.originalname);
-                    const targetName = `${file.fieldname}${ext}`;
-                    filesMetadata.special[file.fieldname] = targetName;
-                    await uploadFile(targetName, file.path, file.mimetype, ozelFolderId);
+
+                const locked = tokenManager.markTokenUsed(submittedToken, orderId);
+                if (!locked) {
+                    return res.status(409).json({
+                        success: false,
+                        error: 'Token işaretlenemedi. Lütfen tekrar deneyin.',
+                        orderId: null
+                    });
+                }
+                console.log(`🔒 Token locked immediately: ${submittedToken.substring(0, 16)}... for order ${orderId}`);
+            }
+
+            const orderFolderName = orderUtils.createOrderFolderName(orderId, customerSlug);
+            const yearMonthPath = orderUtils.getYearMonthPath(new Date());
+            const createdAt = new Date().toISOString();
+
+            console.log(`📦 Yeni Sipariş: ${orderId} - ${customerName}`);
+
+            const rootFolderId = config.drive.rootFolderId
+                ? config.drive.rootFolderId
+                : await findOrCreateFolder(config.drive.rootFolderName);
+
+            const [yearFolder, monthFolder] = yearMonthPath.split('/');
+            const yearFolderId = await findOrCreateFolder(yearFolder, rootFolderId);
+            const monthFolderId = await findOrCreateFolder(monthFolder, yearFolderId);
+
+            const mainFolderId = await createFolder(orderFolderName, monthFolderId);
+            console.log(`📁 Klasör oluşturuldu: ${yearMonthPath}/${orderFolderName}`);
+
+            const genelFolderId = await createFolder('genel', mainFolderId);
+            const ozelFolderId = await createFolder('ozel', mainFolderId);
+            await createFolder('outputs', mainFolderId);
+            await createFolder('logs', mainFolderId);
+
+            const filesMetadata = { special: {}, general: [] };
+
+            if (req.files && req.files.length > 0) {
+                for (const file of req.files) {
+                    if (file.fieldname === '12_Genel_Photos') {
+                        const targetName = `Foto_${Date.now()}_${file.originalname}`;
+                        filesMetadata.general.push(targetName);
+                        await uploadFile(targetName, file.path, file.mimetype, genelFolderId);
+                    } else {
+                        const ext = path.extname(file.originalname);
+                        const targetName = `${file.fieldname}${ext}`;
+                        filesMetadata.special[file.fieldname] = targetName;
+                        await uploadFile(targetName, file.path, file.mimetype, ozelFolderId);
+                    }
                 }
             }
-        }
 
-        // 8. Create order.json manifest
-        const orderManifest = {
-            schemaVersion: "1.0",
-            orderId: orderId,
-            customerName: customerName,
-            customerSlug: customerSlug,
-            createdAt: createdAt,
-            fields: {},
-            files: filesMetadata,
-            status: "submitted"
-        };
+            const orderManifest = {
+                schemaVersion: "1.0",
+                orderId,
+                customerName,
+                customerSlug,
+                createdAt,
+                fields: {},
+                files: filesMetadata,
+                status: "submitted"
+            };
 
-        // Add all text fields to manifest
-        for (const [key, value] of Object.entries(textData)) {
-            if (key !== 'musteri_adi' && value && value.trim() !== "") {
-                orderManifest.fields[key] = value;
+            for (const [key, value] of Object.entries(textData)) {
+                if (key !== 'musteri_adi' && value && value.trim() !== "") {
+                    orderManifest.fields[key] = value;
+                }
             }
-        }
 
-        // Upload order.json
-        await createTextFile('order.json', JSON.stringify(orderManifest, null, 2), mainFolderId);
-        console.log('📄 order.json oluşturuldu');
+            await createTextFile('order.json', JSON.stringify(orderManifest, null, 2), mainFolderId);
+            console.log('📄 order.json oluşturuldu');
 
-        // 9. Create bilgiler.txt for backward compatibility with Photoshop scripts
-        let txtContent = "";
-        for (const [key, value] of Object.entries(textData)) {
-            if (key !== 'musteri_adi' && value && value.trim() !== "") {
-                txtContent += `${key}: ${value}\r\n`;
+            let txtContent = "";
+            for (const [key, value] of Object.entries(textData)) {
+                if (key !== 'musteri_adi' && value && value.trim() !== "") {
+                    txtContent += `${key}: ${value}\r\n`;
+                }
             }
+            await createTextFile('bilgiler.txt', txtContent, mainFolderId);
+            console.log('📄 bilgiler.txt oluşturuldu');
+
+            return res.json({
+                success: true,
+                orderId,
+                message: `Sipariş başarıyla oluşturuldu! Sipariş numarası: ${orderId}`
+            });
+
+        } catch (error) {
+            console.error("❌ Sipariş Hatası:", error);
+
+            let userMessage = "Sunucu hatası oluştu.";
+            if (error.message?.includes('Geçersiz dosya tipi')) userMessage = error.message;
+            else if (error.message?.includes('Google Drive')) userMessage = "Sistem hatası. Lütfen yönetici ile iletişime geçin.";
+            else if (error.message) userMessage = error.message;
+
+            return res.status(500).json({ success: false, error: userMessage, orderId: null });
+        } finally {
+            cleanupFiles.forEach(p => { if (fs.existsSync(p)) fs.unlinkSync(p); });
         }
-        await createTextFile('bilgiler.txt', txtContent, mainFolderId);
-        console.log('📄 bilgiler.txt oluşturuldu');
-
-        // Token already marked as used earlier (immediately after validation)
-        // No need to mark again here
-
-        res.json({
-            success: true,
-            orderId: orderId,
-            message: `Sipariş başarıyla oluşturuldu! Sipariş numarası: ${orderId}`
-        });
-
-    } catch (error) {
-        console.error("❌ Sipariş Hatası:", error);
-
-        // Provide user-friendly error messages
-        let userMessage = "Sunucu hatası oluştu.";
-
-        if (error.message && error.message.includes('Geçersiz dosya tipi')) {
-            userMessage = error.message;
-        } else if (error.message && error.message.includes('File too large')) {
-            userMessage = "Dosya boyutu çok büyük. Maksimum 20MB yükleyebilirsiniz.";
-        } else if (error.message && error.message.includes('Too many files')) {
-            userMessage = "Çok fazla dosya. Maksimum 50 dosya yükleyebilirsiniz.";
-        } else if (error.message && error.message.includes('Google Drive yetkisi')) {
-            userMessage = "Sistem hatası. Lütfen yönetici ile iletişime geçin.";
-        } else if (error.message) {
-            userMessage = error.message;
-        }
-
-        res.status(500).json({
-            success: false,
-            error: userMessage,
-            orderId: null
-        });
-    } finally {
-        // Temizlik
-        cleanupFiles.forEach(p => {
-            if (fs.existsSync(p)) fs.unlinkSync(p);
-        });
-    }
+    });
 });
+
 
 app.listen(PORT, () => {
     console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);

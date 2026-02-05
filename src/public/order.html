@@ -881,7 +881,20 @@
                     try {
                         // Backend API Çağrısı
                         const res = await fetch('/api/olustur', { method: 'POST', body: formData });
-                        const result = await res.json();
+                        const ct = res.headers.get('content-type') || '';
+
+                        let result;
+                        if (ct.includes('application/json')) {
+                            result = await res.json();
+                        } else {
+                            const text = await res.text();
+                            throw new Error(`Sunucu beklenmeyen cevap döndü (HTTP ${res.status}).`);
+                        }
+
+                        if (!res.ok) {
+                            throw new Error(result?.error || `HTTP ${res.status}`);
+                        }
+
 
                         if (result.success && result.orderId) {
                             overlay.innerHTML = `
